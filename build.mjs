@@ -935,9 +935,8 @@ function layout({
   <a class="skip-link" href="#main">Skip to content</a>
   <header class="sticky top-0 z-50 border-b-4 border-ink bg-paper">
     <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-3">
-      <a class="group flex items-center gap-3" href="/" aria-label="Home">
+      <a class="group flex items-center" href="/" aria-label="${esc(SITE.title)} — home">
         <span class="logo-mark grid h-10 w-10 place-items-center border-[3px] border-ink bg-teal font-black shadow-brutal-sm transition-transform group-hover:-rotate-3">MK</span>
-        <span class="hidden text-sm font-black uppercase tracking-tight sm:block">${esc(SITE.title)}</span>
       </a>
       <nav aria-label="Main" class="flex flex-wrap items-center gap-1 text-xs font-bold sm:text-sm">${navHtml}</nav>
     </div>
@@ -990,7 +989,7 @@ function homePage(posts, categories) {
           <span class="tag bg-aqua">Blog</span>
           <span class="tag bg-paper">Since 2022</span>
         </div>
-        <h1 class="mt-6 break-words text-[2.65rem] font-black uppercase leading-[0.88] tracking-tighter sm:text-7xl">Mordecai<br><span class="mark px-1">Kipng’etich</span></h1>
+        <h1 class="mt-6 break-words text-[2.65rem] font-black uppercase leading-[0.88] tracking-tighter sm:text-7xl">Hi, I’m<br><span class="mark px-1">Mordz</span>.</h1>
         <p class="mt-5 max-w-xl text-xl font-bold leading-snug sm:text-2xl">${esc(SITE.tagline)}</p>
         <p class="mt-3 max-w-xl text-base leading-relaxed text-ink/80">STEM instructor, freelance software developer, and CS graduate in Kenya. I write about tech, media, books, music, homelabs, and the occasional tangent.</p>
         <div class="mt-6 flex flex-wrap gap-2">${socialChips()}</div>
