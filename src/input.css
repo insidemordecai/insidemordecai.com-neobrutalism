@@ -92,6 +92,11 @@
     @apply border-2 border-transparent px-2 py-1 font-bold transition-all hover:border-ink hover:bg-acid hover:shadow-brutal-sm;
   }
 
+  .nav-link:hover,
+  .nav-link[aria-current="page"] {
+    color: var(--color-on-accent);
+  }
+
   .nav-link[aria-current="page"] {
     @apply border-ink bg-acid shadow-brutal-sm;
   }
@@ -103,6 +108,7 @@
 
   .card {
     @apply border-[3px] border-ink bg-paper shadow-brutal transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-brutal-lg;
+    color: var(--color-ink);
   }
 
   .tag {
@@ -112,6 +118,7 @@
 
   .chip {
     @apply inline-flex items-center gap-1 border-2 border-ink bg-paper px-2.5 py-1 font-mono text-xs font-bold;
+    color: var(--color-ink);
   }
 
   .social-chip {
