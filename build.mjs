@@ -21,7 +21,7 @@ const PAGE_SIZE = 20;
 const POSTS_PER_HOME = 6;
 
 const SITE = {
-  url: "https://insidemordecai.com",
+  url: (process.env.SITE_URL || "https://insidemordecai.com").replace(/\/$/, ""),
   title: "Mordecai Kipng’etich",
   tagline: "welcome to my corner of the internet about everything",
   description:
@@ -40,16 +40,21 @@ const SOCIALS = [
     color: "bg-lime",
   },
   {
+    label: "Apple Music",
+    href: "https://music.apple.com/profile/insidemordecai",
+    color: "bg-blush",
+  },
+  {
     label: "Bluesky",
     href: "https://bsky.app/profile/insidemordecai.com",
-    color: "bg-sky",
+    color: "bg-aqua",
   },
   {
     label: "Threads",
     href: "https://threads.net/insidemordecai",
-    color: "bg-bubblegum",
+    color: "bg-mist",
   },
-  { label: "X", href: "https://x.com/insidemordecai", color: "bg-paper" },
+  { label: "Twitter", href: "https://x.com/insidemordecai", color: "bg-paper" },
   {
     label: "GitHub",
     href: "https://github.com/insidemordecai",
@@ -58,7 +63,7 @@ const SOCIALS = [
   {
     label: "Goodreads",
     href: "https://goodreads.com/insidemordecai",
-    color: "bg-tangerine",
+    color: "bg-coral",
   },
 ];
 
@@ -92,29 +97,29 @@ const MONTHS_SHORT = [
 ];
 
 const ACCENTS = [
-  "bg-acid",
-  "bg-sky",
-  "bg-bubblegum",
+  "bg-mist",
+  "bg-aqua",
+  "bg-blush",
   "bg-lime",
-  "bg-tangerine",
-  "bg-grape",
+  "bg-acid",
+  "bg-coral",
 ];
 
 const CATEGORY_ACCENTS = {
-  technical: "bg-sky",
-  opinion: "bg-bubblegum",
+  technical: "bg-aqua",
+  opinion: "bg-blush",
   updates: "bg-lime",
-  web: "bg-grape",
+  web: "bg-mist",
 };
 
 const PAGE_ACCENTS = {
-  about: "bg-sky",
-  links: "bg-bubblegum",
+  about: "bg-mist",
+  links: "bg-aqua",
   subscribe: "bg-lime",
-  colophon: "bg-grape",
-  contact: "bg-tangerine",
+  colophon: "bg-paper",
+  contact: "bg-blush",
   support: "bg-acid",
-  attic: "bg-tomato",
+  attic: "bg-coral",
 };
 
 marked.setOptions({ gfm: true, breaks: false });
@@ -161,6 +166,10 @@ function decodeEntities(value = "") {
 }
 
 const stripTags = (value = "") => String(value).replace(/<[^>]*>/g, "");
+
+const smartText = (value = "") => String(value).replace(/(?<!-)--(?!-)/g, "—");
+
+const escText = (value = "") => esc(smartText(value));
 
 function slugify(value = "") {
   return (
@@ -370,9 +379,11 @@ function loadContent() {
       isAttic,
       slug,
       url,
-      title: String(data.title || slug),
-      summary: String(data.summary || data.description || ""),
-      description: String(data.description || data.summary || ""),
+      title: smartText(String(data.title || slug)),
+      summary: smartText(String(data.summary || data.description || "")),
+      hasSummary: Boolean(data.summary || data.description),
+      description: smartText(String(data.description || data.summary || "")),
+      gallery: String(data.gallery || "").toLowerCase(),
       date: Number.isNaN(date.getTime()) ? new Date(0) : date,
       categories: asArray(data.categories).map(String),
       tags: asArray(data.tags).map(String),
@@ -472,20 +483,129 @@ function renderGallery(pattern, item) {
   const files = resolveGlob(item.dir, pattern);
   if (files.length === 0) return "";
 
-  const images = files
-    .map((file) => {
-      const relative = path
-        .relative(item.dir, file)
-        .split(path.sep)
-        .join("/");
-      const alt = path
-        .basename(file, path.extname(file))
-        .replace(/[-_]+/g, " ");
-      return `<img src="${esc(relative)}" alt="${esc(alt)}" loading="lazy" decoding="async">`;
+  const images = files.map((file) => {
+    const relative = path
+      .relative(item.dir, file)
+      .split(path.sep)
+      .join("/");
+    const alt = path.basename(file, path.extname(file)).replace(/[-_]+/g, " ");
+    return { src: relative, alt, title: "" };
+  });
+
+  return galleryMarkup(images, "grid");
+}
+
+const IMAGE_LINE_RE =
+  /^\s*!\[([^\]]*)\]\(\s*([^)\s]+)(?:\s+"([^"]*)")?\s*\)\s*$/;
+
+/**
+ * Collect a run of Markdown images sitting at the very end of a post.
+ * These are usually screenshots that deserve a gallery rather than a
+ * mile-long stack of full-width images.
+ */
+function extractTrailingImages(source) {
+  const lines = source.split("\n");
+  let index = lines.length - 1;
+
+  while (index >= 0 && lines[index].trim() === "") index -= 1;
+
+  const images = [];
+  while (index >= 0) {
+    const line = lines[index];
+    if (line.trim() === "") {
+      index -= 1;
+      continue;
+    }
+    const match = line.match(IMAGE_LINE_RE);
+    if (!match) break;
+    images.unshift({
+      alt: match[1],
+      src: match[2],
+      title: match[3] || "",
+    });
+    index -= 1;
+  }
+
+  if (images.length < 2) return null;
+  return { source: lines.slice(0, index + 1).join("\n"), images };
+}
+
+function galleryMode(item, count) {
+  const preference = String(item.gallery || "").toLowerCase();
+  if (["off", "none", "false"].includes(preference)) return null;
+  if (preference === "carousel" || preference === "grid") return preference;
+  return count >= 5 ? "carousel" : "grid";
+}
+
+function galleryMarkup(images, mode, label = "Image gallery") {
+  const figures = images
+    .map((image) => {
+      const caption = image.title
+        ? `<figcaption>${escText(image.title)}</figcaption>`
+        : "";
+      return `<figure><img src="${esc(image.src)}" alt="${esc(image.alt)}" loading="lazy" decoding="async">${caption}</figure>`;
     })
     .join("");
 
-  return `<div class="neo-gallery">${images}</div>`;
+  if (mode === "carousel") {
+    return `<div class="neo-carousel" role="region" aria-label="${esc(label)}" tabindex="0"><p class="neo-carousel-hint" aria-hidden="true">Scroll →</p><div class="neo-carousel-track">${figures}</div></div>`;
+  }
+
+  return `<div class="neo-gallery" role="group" aria-label="${esc(label)}">${figures}</div>`;
+}
+
+const ALERT_LABELS = {
+  note: "Note",
+  tip: "Tip",
+  important: "Important",
+  warning: "Warning",
+  caution: "Caution",
+  edit: "Work in progress",
+};
+
+function alertBlock(kind, bodyHtml, label) {
+  const safeKind = ALERT_LABELS[kind] ? kind : "note";
+  return `<div class="neo-alert neo-alert-${safeKind}"><p class="neo-alert-label">${escText(label || ALERT_LABELS[safeKind])}</p><div class="neo-alert-body">${bodyHtml}</div></div>`;
+}
+
+/** Turn GitHub-style blockquote alerts (`> [!NOTE]`) into callouts. */
+function convertGfmAlerts(html) {
+  return String(html).replace(/<blockquote>([\s\S]*?)<\/blockquote>/g, (match, inner) => {
+    const marker = inner.match(
+      /^\s*<p>\s*\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]\s*(?:<br\s*\/?>)?\s*/i,
+    );
+    if (!marker) return match;
+
+    const kind = marker[1].toLowerCase();
+    const body = inner
+      .replace(
+        /^\s*<p>\s*\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]\s*(?:<br\s*\/?>)?\s*/i,
+        "<p>",
+      )
+      .replace(/<p>\s*<\/p>/g, "");
+
+    return alertBlock(kind, body);
+  });
+}
+
+/** Render `--` as an em dash in prose, never inside code or attributes. */
+function smartDashes(html) {
+  const parts = String(html).split(/(<[^>]+>)/);
+  let codeDepth = 0;
+
+  return parts
+    .map((part) => {
+      if (part.startsWith("<")) {
+        if (/^<(code|pre|script|style|textarea)\b/i.test(part)) codeDepth += 1;
+        else if (/^<\/(code|pre|script|style|textarea)>/i.test(part)) {
+          codeDepth = Math.max(0, codeDepth - 1);
+        }
+        return part;
+      }
+      if (codeDepth > 0) return part;
+      return part.replace(/(?<!-)--(?!-)/g, "—");
+    })
+    .join("");
 }
 
 function renderMarkdown(markdown, item, refMap) {
@@ -498,14 +618,20 @@ function renderMarkdown(markdown, item, refMap) {
 
   // Hugo alert shortcodes -> neobrutalist callouts.
   source = source.replace(ALERT_RE, (_, type, inner) => {
-    const isEdit = (type || "").toLowerCase() === "edit";
-    const label = isEdit ? "Work in progress" : "Note";
-    const tone = isEdit ? "neo-alert-edit" : "neo-alert-note";
+    const requested = (type || "note").toLowerCase();
+    const kind = requested === "edit"
+      ? "edit"
+      : requested.includes("warn")
+        ? "warning"
+        : requested.includes("danger")
+          ? "caution"
+          : requested.includes("tip")
+            ? "tip"
+            : "note";
+    const label = kind === "edit" ? "Work in progress" : "";
     const index = blocks.length;
     const bodyHtml = marked.parse(inner.trim());
-    blocks.push(
-      `<div class="neo-alert ${tone}"><p class="neo-alert-label">${label}</p><div class="neo-alert-body">${bodyHtml}</div></div>`,
-    );
+    blocks.push(alertBlock(kind, bodyHtml, label));
     return `\n\n%%NEO_BLOCK_${index}%%\n\n`;
   });
 
@@ -538,6 +664,17 @@ function renderMarkdown(markdown, item, refMap) {
     .replace(/\{\{[<%][\s\S]*?[%>]\}\}/g, "")
     .replace(/<!--\s*more\s*-->/gi, "");
 
+  // A trailing run of images becomes a grid or a scroll-snap carousel.
+  const trailing = extractTrailingImages(source);
+  if (trailing) {
+    const mode = galleryMode(item, trailing.images.length);
+    if (mode) {
+      const index = blocks.length;
+      blocks.push(galleryMarkup(trailing.images, mode));
+      source = `${trailing.source}\n\n%%NEO_BLOCK_${index}%%\n\n`;
+    }
+  }
+
   let html = marked.parse(source);
   if (typeof html !== "string") html = String(html);
 
@@ -549,10 +686,13 @@ function renderMarkdown(markdown, item, refMap) {
     )
     .replace(/%%NEO_BLOCK_(\d+)%%/g, (_, index) => blocks[Number(index)] || "");
 
+  html = convertGfmAlerts(html);
+
   const { html: withIds, toc } = addHeadingIds(html);
   html = enhanceImages(withIds);
   html = wrapTables(html);
   html = addExternalRel(html);
+  html = smartDashes(html);
 
   return { html, toc };
 }
@@ -638,33 +778,30 @@ function accentFor(post) {
   );
 }
 
-function categoryTags(post, onAccent = false) {
+function mutedCategoryLinks(post) {
   return post.categories
-    .map((category, index) => {
-      const color = onAccent
-        ? "bg-paper"
-        : CATEGORY_ACCENTS[category.toLowerCase()] ||
-          ACCENTS[index % ACCENTS.length];
-      return `<a class="tag ${color} transition-shadow hover:shadow-brutal-sm" href="/categories/${slugify(category)}/">${esc(category)}</a>`;
-    })
-    .join("");
+    .map(
+      (category) =>
+        `<a class="hover:text-ink hover:underline" href="/categories/${slugify(category)}/">${esc(category)}</a>`,
+    )
+    .join(`<span class="mx-1.5" aria-hidden="true">·</span>`);
 }
 
-function tagChips(post, limit = 99) {
+function mutedTagLinks(post, limit = 99) {
   return post.tags
     .slice(0, limit)
     .map(
       (tag) =>
-        `<a class="tag bg-paper transition-colors hover:bg-acid" href="/tags/${slugify(tag)}/">#${esc(tag)}</a>`,
+        `<a class="hover:text-ink hover:underline" href="/tags/${slugify(tag)}/">#${esc(tag)}</a>`,
     )
     .join("");
 }
 
-function seriesTags(post, onAccent = false) {
+function seriesLink(post) {
   return post.series
     .map(
       (name) =>
-        `<a class="tag ${onAccent ? "bg-paper" : "bg-grape"} transition-shadow hover:shadow-brutal-sm" href="/series/${slugify(name)}/">Series: ${esc(name)}</a>`,
+        `<a class="hover:text-ink hover:underline" href="/series/${slugify(name)}/">Series: ${esc(name)}</a>`,
     )
     .join("");
 }
@@ -679,7 +816,7 @@ function socialChips() {
 function footerSocials() {
   return SOCIALS.map(
     (social) =>
-      `<a class="border-2 border-paper/30 px-2 py-1 font-mono text-[10px] uppercase tracking-wide transition-colors hover:border-acid hover:text-acid" href="${social.href}" rel="me">${esc(social.label)}</a>`,
+      `<a class="border-2 border-paper/30 px-2 py-1 font-mono text-[10px] uppercase tracking-wide transition-colors hover:border-paper hover:text-paper" href="${social.href}" rel="me">${esc(social.label)}</a>`,
   ).join("");
 }
 
@@ -702,11 +839,11 @@ function replyCta(title) {
 }
 
 function postCard(post) {
-  return `<article class="card group flex h-full flex-col p-5"><div class="flex flex-wrap items-center justify-between gap-2"><div class="flex flex-wrap gap-1">${categoryTags(post)}</div><time class="font-mono text-[11px]" datetime="${isoDate(post.date)}">${formatDateShort(post.date)}</time></div><h3 class="mt-4 text-xl font-black leading-tight tracking-tight"><a class="decoration-4 decoration-acid underline-offset-4 group-hover:underline" href="${post.url}">${esc(post.title)}</a></h3><p class="mt-2 text-sm leading-relaxed text-ink/75">${esc(post.summary)}</p><div class="mt-auto pt-5"><div class="flex items-center justify-between border-t-2 border-dashed border-ink/30 pt-3"><span class="font-mono text-[11px] uppercase">${post.readingTime} min read</span><span class="text-sm font-black">Read →</span></div></div></article>`;
+  return `<article class="card flex h-full flex-col p-5"><div class="flex flex-wrap items-center justify-between gap-2 font-mono text-[11px] uppercase tracking-widest text-ink/60"><time datetime="${isoDate(post.date)}">${formatDateShort(post.date)}</time>${post.categories.length ? `<span class="hover:text-ink">${mutedCategoryLinks(post)}</span>` : ""}</div><h3 class="mt-4 text-xl font-black leading-tight tracking-tight"><a class="decoration-3 decoration-teal underline-offset-4 hover:underline" href="${post.url}">${esc(post.title)}</a></h3><p class="mt-2 text-sm leading-relaxed text-ink/75">${esc(post.summary)}</p><div class="mt-auto flex items-center justify-between gap-3 border-t-2 border-dashed border-ink/20 pt-3"><span class="font-mono text-[11px] uppercase tracking-wide text-ink/60">${post.readingTime} min read</span><a class="font-mono text-[11px] font-bold uppercase tracking-widest underline decoration-2 underline-offset-4 hover:bg-acid" href="${post.url}" aria-label="Read ${esc(post.title)}">Read →</a></div></article>`;
 }
 
 function postRow(post) {
-  return `<article class="group grid gap-4 border-[3px] border-ink bg-paper p-4 shadow-brutal transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-brutal-lg sm:grid-cols-[96px_minmax(0,1fr)] sm:p-5"><div class="flex items-center gap-3 sm:flex-col sm:items-start sm:gap-1"><div class="border-2 border-ink ${accentFor(post)} px-2 py-1 text-center font-mono text-xs font-black uppercase"><span class="block text-xl leading-none">${post.date.getUTCDate()}</span><span>${MONTHS_SHORT[post.date.getUTCMonth()]}</span></div><span class="font-mono text-xs text-ink/60">${post.date.getUTCFullYear()}</span></div><div class="min-w-0"><div class="flex flex-wrap items-center gap-2">${categoryTags(post)}<span class="font-mono text-[11px] uppercase text-ink/60">${post.readingTime} min read</span></div><h3 class="mt-2 text-xl font-black leading-tight tracking-tight sm:text-2xl"><a class="decoration-4 decoration-acid underline-offset-4 group-hover:underline" href="${post.url}">${esc(post.title)}</a></h3><p class="mt-1.5 text-sm leading-relaxed text-ink/75">${esc(post.summary)}</p><div class="mt-3 flex flex-wrap gap-1.5">${tagChips(post, 4)}</div></div></article>`;
+  return `<article class="grid gap-4 border-[3px] border-ink bg-paper p-4 shadow-brutal-sm transition-shadow hover:shadow-brutal sm:grid-cols-[96px_minmax(0,1fr)] sm:p-5"><div class="flex items-center gap-3 sm:flex-col sm:items-start sm:gap-1"><div class="border-2 border-ink ${accentFor(post)} px-2 py-1 text-center font-mono text-xs font-black uppercase"><span class="block text-xl leading-none">${post.date.getUTCDate()}</span><span>${MONTHS_SHORT[post.date.getUTCMonth()]}</span></div><span class="font-mono text-xs text-ink/60">${post.date.getUTCFullYear()}</span></div><div class="min-w-0"><div class="flex flex-wrap items-center gap-x-2 font-mono text-[11px] uppercase tracking-widest text-ink/60">${mutedCategoryLinks(post)}${post.categories.length ? '<span aria-hidden="true">·</span>' : ""}<span>${post.readingTime} min read</span></div><h3 class="mt-2 text-xl font-black leading-tight tracking-tight sm:text-2xl"><a class="decoration-3 decoration-teal underline-offset-4 hover:underline" href="${post.url}">${esc(post.title)}</a></h3><p class="mt-1.5 text-sm leading-relaxed text-ink/75">${esc(post.summary)}</p><div class="mt-3 flex flex-wrap items-center justify-between gap-2"><div class="flex flex-wrap gap-x-3 gap-y-1 font-mono text-[11px] text-ink/60">${mutedTagLinks(post, 4)}</div><a class="font-mono text-[11px] font-bold uppercase tracking-widest underline decoration-2 underline-offset-4 hover:bg-acid" href="${post.url}" aria-label="Read ${esc(post.title)}">Read →</a></div></div></article>`;
 }
 
 function pager(currentPage, totalPages, base = "/posts/") {
@@ -744,7 +881,6 @@ function layout({
   const metaDescription = description || SITE.description;
   const canonical = `${SITE.url}${urlPath}`;
   const ogImage = `${SITE.url}/assets/img/social-image.webp`;
-  const year = new Date().getFullYear();
 
   const navItems = [
     ["about", "About", "/about/"],
@@ -768,8 +904,9 @@ function layout({
   <title>${esc(fullTitle)}</title>
   <meta name="description" content="${esc(metaDescription)}">
   <meta name="author" content="${esc(SITE.title)}">
-  <meta name="color-scheme" content="light">
-  <meta name="theme-color" content="#FFD23F">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#009bad" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0c1517" media="(prefers-color-scheme: dark)">
   <link rel="canonical" href="${esc(canonical)}">
   <link rel="stylesheet" href="/assets/style.css">
   <link rel="alternate" type="application/rss+xml" title="${esc(SITE.title)}" href="${SITE.url}/index.xml">
@@ -795,61 +932,33 @@ function layout({
 </head>
 <body class="flex min-h-screen flex-col bg-paper font-sans text-ink antialiased">
   <a class="skip-link" href="#main">Skip to content</a>
-  <header class="sticky top-0 z-50 border-b-4 border-ink bg-paper/95 backdrop-blur">
+  <header class="sticky top-0 z-50 border-b-4 border-ink bg-paper">
     <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-3">
       <a class="group flex items-center gap-3" href="/" aria-label="Home">
-        <span class="grid h-10 w-10 place-items-center border-[3px] border-ink bg-acid font-black shadow-brutal-sm transition-transform group-hover:-rotate-3">MK</span>
-        <span class="hidden leading-tight sm:block">
-          <span class="block text-sm font-black uppercase tracking-tight">${esc(SITE.title)}</span>
-          <span class="block font-mono text-[10px] uppercase tracking-widest text-ink/60">insidemordecai.com</span>
-        </span>
+        <span class="logo-mark grid h-10 w-10 place-items-center border-[3px] border-ink bg-teal font-black text-ink shadow-brutal-sm transition-transform group-hover:-rotate-3">MK</span>
+        <span class="hidden text-sm font-black uppercase tracking-tight sm:block">${esc(SITE.title)}</span>
       </a>
       <nav aria-label="Main" class="flex flex-wrap items-center gap-1 text-xs font-bold sm:text-sm">${navHtml}</nav>
     </div>
   </header>
   <main id="main" class="flex-1">${content}</main>
-  <footer class="border-t-4 border-ink bg-ink text-paper">
-    <div class="mx-auto grid max-w-6xl gap-10 px-4 py-12 md:grid-cols-[1.2fr_1fr_1fr]">
-      <div>
-        <div class="flex items-center gap-3">
-          <span class="grid h-11 w-11 place-items-center border-[3px] border-paper bg-acid font-black text-ink">MK</span>
-          <div>
-            <p class="font-black uppercase tracking-tight">${esc(SITE.title)}</p>
-            <p class="font-mono text-xs text-paper/60">insidemordecai.com</p>
-          </div>
-        </div>
-        <p class="mt-4 max-w-xs text-sm leading-relaxed text-paper/75">STEM instructor, freelance software developer, and CS graduate in Kenya. Writing about tech, media, books, music, homelabs, and life.</p>
-        <p class="mt-4 inline-block border-2 border-paper/30 px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-paper/60">Made in Kenya</p>
-        <div class="mt-5 flex flex-wrap gap-2">${footerSocials()}</div>
+  <footer class="site-footer border-t-4 border-ink">
+    <div class="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-10 sm:flex-row sm:items-start sm:justify-between">
+      <div class="flex flex-col gap-4">
+        <a class="w-fit" href="/" aria-label="Home"><span class="grid h-10 w-10 place-items-center border-[3px] border-paper bg-acid font-black text-ink">MK</span></a>
+        <div class="flex flex-wrap gap-2">${footerSocials()}</div>
       </div>
-      <div>
-        <p class="font-mono text-xs uppercase tracking-widest text-acid">Explore</p>
-        <ul class="mt-3 space-y-2 text-sm font-bold">
-          <li><a class="hover:text-acid hover:underline" href="/posts/">All posts</a></li>
-          <li><a class="hover:text-acid hover:underline" href="/categories/">Categories</a></li>
-          <li><a class="hover:text-acid hover:underline" href="/tags/">Tags</a></li>
-          <li><a class="hover:text-acid hover:underline" href="/series/">Series</a></li>
-          <li><a class="hover:text-acid hover:underline" href="/links/">Links</a></li>
-          <li><a class="hover:text-acid hover:underline" href="/it-support/">Attic</a></li>
+      <nav aria-label="Footer">
+        <ul class="flex flex-wrap gap-x-6 gap-y-2 text-sm font-bold">
+          <li><a href="/categories/">Categories</a></li>
+          <li><a href="/tags/">Tags</a></li>
+          <li><a href="/series/">Series</a></li>
+          <li><a href="/contact/">Contact</a></li>
+          <li><a href="/support/">Support</a></li>
+          <li><a href="/colophon/">Colophon</a></li>
+          <li><a href="/index.xml">RSS</a></li>
         </ul>
-      </div>
-      <div>
-        <p class="font-mono text-xs uppercase tracking-widest text-acid">Site</p>
-        <ul class="mt-3 space-y-2 text-sm font-bold">
-          <li><a class="hover:text-acid hover:underline" href="/about/">About</a></li>
-          <li><a class="hover:text-acid hover:underline" href="/subscribe/">Subscribe</a></li>
-          <li><a class="hover:text-acid hover:underline" href="/colophon/">Colophon</a></li>
-          <li><a class="hover:text-acid hover:underline" href="/contact/">Contact</a></li>
-          <li><a class="hover:text-acid hover:underline" href="/support/">Support</a></li>
-          <li><a class="hover:text-acid hover:underline" href="/index.xml">RSS feed</a></li>
-        </ul>
-      </div>
-    </div>
-    <div class="border-t-2 border-paper/20">
-      <div class="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-5 font-mono text-[11px] text-paper/60 sm:flex-row sm:items-center sm:justify-between">
-        <p>© ${year} ${esc(SITE.title)} · <a class="hover:text-acid hover:underline" href="${SITE.licenseUrl}" rel="noopener noreferrer">${SITE.license}</a></p>
-        <p>No trackers. No ads. No third-party requests.</p>
-      </div>
+      </nav>
     </div>
   </footer>
 </body>
@@ -865,12 +974,10 @@ function homePage(posts, categories) {
   const latest = posts[0]?.date || new Date();
 
   const categoryCards = categories
-    .map((category, index) => {
-      const accent =
-        CATEGORY_ACCENTS[category.name.toLowerCase()] ||
-        ACCENTS[index % ACCENTS.length];
-      return `<a class="group border-[3px] border-ink bg-paper p-4 shadow-brutal transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-brutal-lg" href="/categories/${category.slug}/"><div class="flex items-center justify-between gap-3"><span class="tag ${accent}">${category.posts.length} post${category.posts.length === 1 ? "" : "s"}</span><span class="font-mono text-sm" aria-hidden="true">→</span></div><p class="mt-4 text-lg font-black uppercase tracking-tight">${esc(category.name)}</p><p class="mt-1 font-mono text-[11px] uppercase text-ink/60">Browse category</p></a>`;
-    })
+    .map(
+      (category, index) =>
+        `<a class="group border-[3px] border-ink bg-paper p-4 shadow-brutal-sm transition-all hover:-translate-y-0.5 hover:shadow-brutal" href="/categories/${category.slug}/"><span class="block h-1.5 w-10 ${ACCENTS[index % ACCENTS.length]}"></span><div class="mt-4 flex items-baseline justify-between gap-3"><p class="text-lg font-black uppercase tracking-tight">${esc(category.name)}</p><span class="font-mono text-[11px] text-ink/60">${category.posts.length}</span></div></a>`,
+    )
     .join("");
 
   const content = `
@@ -878,11 +985,11 @@ function homePage(posts, categories) {
     <div class="relative mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:py-16 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-center">
       <div>
         <div class="flex flex-wrap gap-2">
-          <span class="tag bg-acid">Personal website</span>
-          <span class="tag bg-sky">Blog</span>
+          <span class="tag bg-teal">Personal website</span>
+          <span class="tag bg-aqua">Blog</span>
           <span class="tag bg-paper">Since 2022</span>
         </div>
-        <h1 class="mt-6 break-words text-[2.65rem] font-black uppercase leading-[0.88] tracking-tighter sm:text-7xl">Mordecai<br><span class="bg-acid px-1">Kipng’etich</span></h1>
+        <h1 class="mt-6 break-words text-[2.65rem] font-black uppercase leading-[0.88] tracking-tighter sm:text-7xl">Mordecai<br><span class="mark px-1">Kipng’etich</span></h1>
         <p class="mt-5 max-w-xl text-xl font-bold leading-snug sm:text-2xl">${esc(SITE.tagline)}</p>
         <p class="mt-3 max-w-xl text-base leading-relaxed text-ink/80">STEM instructor, freelance software developer, and CS graduate in Kenya. I write about tech, media, books, music, homelabs, and the occasional tangent.</p>
         <div class="mt-6 flex flex-wrap gap-2">${socialChips()}</div>
@@ -892,12 +999,12 @@ function homePage(posts, categories) {
         </div>
       </div>
       <div class="relative mx-auto w-full max-w-[320px]">
-        <div class="rotate-2 border-4 border-ink bg-sky p-3 shadow-brutal">
+        <div class="rotate-2 border-4 border-ink bg-aqua p-3 shadow-brutal">
           <img src="/assets/img/profile.webp" alt="${esc(SITE.title)}" width="1080" height="1080" class="aspect-square w-full border-[3px] border-ink object-cover" fetchpriority="high">
           <p class="mt-3 border-2 border-ink bg-paper px-2 py-1 text-center font-mono text-[10px] uppercase tracking-widest">${esc(SITE.location)}</p>
         </div>
         <span class="absolute -bottom-8 left-2 rotate-[-4deg] border-[3px] border-ink bg-acid px-3 py-2 text-xs font-black uppercase shadow-brutal-sm">not from Regular Show</span>
-        <span class="absolute -right-3 -top-3 rotate-6 border-[3px] border-ink bg-bubblegum px-2 py-1 font-mono text-[10px] font-black uppercase shadow-brutal-sm">hello!</span>
+        <span class="absolute -right-3 -top-3 rotate-6 border-[3px] border-ink bg-blush px-2 py-1 font-mono text-[10px] font-black uppercase shadow-brutal-sm">hello!</span>
       </div>
     </div>
   </section>
@@ -911,7 +1018,7 @@ function homePage(posts, categories) {
     </div>
     <div class="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">${recent.map(postCard).join("")}</div>
   </section>
-  <section class="border-y-4 border-ink bg-bubblegum/25">
+  <section class="border-y-4 border-ink bg-mist/70">
     <div class="mx-auto max-w-6xl px-4 py-12 sm:py-16">
       <div class="flex flex-wrap items-end justify-between gap-4">
         <div>
@@ -928,7 +1035,6 @@ function homePage(posts, categories) {
       <div>
         <p class="font-mono text-xs uppercase tracking-widest">Say hello</p>
         <h2 class="mt-2 text-2xl font-black uppercase tracking-tight sm:text-3xl">Got a link, a book, or a bug to share?</h2>
-        <p class="mt-2 max-w-xl text-sm font-bold">Email is the most reliable way to reach me. I read everything.</p>
       </div>
       <div class="flex flex-wrap gap-3">
         <a class="btn bg-paper" href="/contact/">Contact me →</a>
@@ -968,13 +1074,13 @@ function postsPage(posts, page, totalPages, categories) {
   const categoryLinks = categories
     .map(
       (category) =>
-        `<a class="tag bg-paper transition-colors hover:bg-acid" href="/categories/${category.slug}/">${esc(category.name)} <span class="ml-1 font-mono">${category.posts.length}</span></a>`,
+        `<a class="font-mono text-[11px] uppercase tracking-wide text-ink/60 hover:text-ink hover:underline" href="/categories/${category.slug}/">${esc(category.name)} <span class="text-ink/50">${category.posts.length}</span></a>`,
     )
     .join("");
 
   const title = page === 1 ? "Posts" : `Posts — page ${page}`;
   const content = `
-  <header class="border-b-4 border-ink bg-lime">
+  <header class="border-b-4 border-ink bg-teal">
     <div class="mx-auto max-w-6xl px-4 py-10 sm:py-14">
       <p class="tag bg-paper">Archive</p>
       <h1 class="mt-4 text-4xl font-black uppercase tracking-tight sm:text-6xl">All posts</h1>
@@ -983,7 +1089,7 @@ function postsPage(posts, page, totalPages, categories) {
     </div>
   </header>
   <div class="mx-auto max-w-4xl px-4 py-10">
-    <div class="mb-8 flex flex-wrap items-center gap-2"><span class="font-mono text-[11px] uppercase tracking-widest text-ink/60">Jump to</span>${categoryLinks}</div>
+    <div class="mb-8 flex flex-wrap items-center gap-x-4 gap-y-2"><span class="font-mono text-[11px] uppercase tracking-widest text-ink/60">Jump to</span>${categoryLinks}</div>
     ${rows}
     ${pager(page, totalPages)}
   </div>`;
@@ -1006,9 +1112,17 @@ function postPage(post, allPosts) {
   const toc = tocBox(post.toc);
   const hasToc = post.toc.length >= 2;
 
-  const seriesTag = seriesTags(post, true);
-
-  const tagsBlock = `<div class="mt-10 flex flex-wrap items-center gap-2 border-t-4 border-ink pt-6"><span class="font-mono text-xs uppercase tracking-widest">Filed under</span>${categoryTags(post)}${tagChips(post)}</div>`;
+  const filedUnder = `<div class="mt-10 flex flex-wrap items-center gap-x-4 gap-y-2 border-t-2 border-ink/20 pt-5 font-mono text-xs"><span class="uppercase tracking-widest text-ink/60">Filed under</span>${post.categories
+    .map(
+      (category) =>
+        `<a class="underline decoration-ink/25 underline-offset-4 hover:decoration-ink" href="/categories/${slugify(category)}/">${esc(category)}</a>`,
+    )
+    .join("")}${post.tags
+    .map(
+      (tag) =>
+        `<a class="text-ink/60 hover:text-ink hover:underline" href="/tags/${slugify(tag)}/">#${esc(tag)}</a>`,
+    )
+    .join("")}</div>`;
 
   const prevNext = `<nav aria-label="Post navigation" class="mt-10 grid gap-4 sm:grid-cols-2">${
     newer
@@ -1023,11 +1137,10 @@ function postPage(post, allPosts) {
   const content = `
   <header class="border-b-4 border-ink ${accent}">
     <div class="mx-auto max-w-6xl px-4 py-8 sm:py-12">
-      <nav aria-label="Breadcrumb" class="font-mono text-[11px] uppercase tracking-widest"><a class="underline decoration-2 underline-offset-2 hover:bg-paper" href="/">Home</a> <span aria-hidden="true">/</span> <a class="underline decoration-2 underline-offset-2 hover:bg-paper" href="/posts/">Posts</a> <span aria-hidden="true">/</span> <span class="text-ink/70">${esc(post.title)}</span></nav>
-      <div class="mt-5 flex flex-wrap gap-2">${categoryTags(post, true)}${seriesTag}</div>
-      <h1 class="mt-4 max-w-4xl break-words text-4xl font-black uppercase leading-[0.95] tracking-tight sm:text-5xl lg:text-6xl">${esc(post.title)}</h1>
+      <nav aria-label="Breadcrumb" class="font-mono text-[11px] uppercase tracking-widest"><a class="underline decoration-2 underline-offset-2 hover:bg-paper" href="/">Home</a> <span aria-hidden="true">/</span> <a class="underline decoration-2 underline-offset-2 hover:bg-paper" href="/posts/">Posts</a>${post.categories.length ? ` <span aria-hidden="true">/</span> <a class="underline decoration-2 underline-offset-2 hover:bg-paper" href="/categories/${slugify(post.categories[0])}/">${esc(post.categories[0])}</a>` : ""}</nav>
+      <h1 class="mt-5 max-w-4xl break-words text-4xl font-black uppercase leading-[0.95] tracking-tight sm:text-5xl lg:text-6xl">${esc(post.title)}</h1>
       <p class="mt-4 max-w-3xl text-lg font-bold leading-snug">${esc(post.summary)}</p>
-      <div class="mt-6 flex flex-wrap items-center gap-2"><time class="chip" datetime="${isoDate(post.date)}">${formatDate(post.date)}</time><span class="chip">${post.readingTime} min read</span></div>
+      <div class="mt-6 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] uppercase tracking-widest text-ink/60"><time datetime="${isoDate(post.date)}">${formatDate(post.date)}</time><span aria-hidden="true">·</span><span>${post.readingTime} min read</span>${post.series.length ? `<span aria-hidden="true">·</span>${seriesLink(post)}` : ""}</div>
     </div>
   </header>
   <div class="mx-auto max-w-6xl px-4 py-10">
@@ -1035,10 +1148,10 @@ function postPage(post, allPosts) {
       ${hasToc ? `<aside class="h-fit lg:sticky lg:top-24">${toc}</aside>` : ""}
       <div class="min-w-0">
         <article class="prose-neo max-w-3xl ${hasToc ? "" : "mx-auto"}">${post.html}</article>
-        ${tagsBlock}
+        ${filedUnder}
         ${replyCta(post.title)}
         ${prevNext}
-        <div class="mt-8"><a class="font-black underline decoration-4 decoration-acid underline-offset-4 hover:bg-acid" href="/posts/">← Back to all posts</a></div>
+        <div class="mt-8"><a class="font-black underline decoration-4 decoration-teal underline-offset-4 hover:bg-acid" href="/posts/">← Back to all posts</a></div>
       </div>
     </div>
   </div>`;
@@ -1085,7 +1198,7 @@ function pagePage(item) {
     <div class="mx-auto max-w-5xl px-4 py-10 sm:py-14">
       <p class="tag bg-paper">${label}</p>
       <h1 class="mt-4 break-words text-4xl font-black uppercase leading-[0.95] tracking-tight sm:text-6xl">${esc(item.title)}</h1>
-      ${item.summary ? `<p class="mt-4 max-w-2xl text-lg font-bold">${esc(item.summary)}</p>` : ""}
+      ${item.hasSummary ? `<p class="mt-4 max-w-2xl text-lg font-bold">${esc(item.summary)}</p>` : ""}
       ${pageActions(item.section)}
     </div>
   </header>
@@ -1106,6 +1219,7 @@ function pagePage(item) {
     nav: item.section,
     content,
     published: isoDate(item.date),
+    noIndex: item.isAttic,
   });
 }
 
@@ -1115,12 +1229,12 @@ function categoriesIndex(categories, latest) {
       const accent =
         CATEGORY_ACCENTS[category.name.toLowerCase()] ||
         ACCENTS[index % ACCENTS.length];
-      return `<a class="group border-[3px] border-ink bg-paper p-5 shadow-brutal transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-brutal-lg" href="/categories/${category.slug}/"><div class="flex items-start justify-between gap-3"><span class="tag ${accent}">Category</span><span class="font-mono text-xs">${category.posts.length}</span></div><p class="mt-5 text-2xl font-black uppercase tracking-tight">${esc(category.name)}</p><p class="mt-1 font-mono text-[11px] uppercase text-ink/60">Browse posts →</p></a>`;
+      return `<a class="group border-[3px] border-ink bg-paper p-5 shadow-brutal-sm transition-all hover:-translate-y-0.5 hover:shadow-brutal" href="/categories/${category.slug}/"><span class="block h-1.5 w-12 ${accent}"></span><div class="mt-4 flex flex-wrap items-baseline justify-between gap-2"><p class="text-2xl font-black uppercase tracking-tight">${esc(category.name)}</p><span class="font-mono text-[11px] text-ink/60">${category.posts.length} post${category.posts.length === 1 ? "" : "s"}</span></div><p class="mt-1 font-mono text-[11px] uppercase tracking-wide text-ink/60 group-hover:text-ink">Browse →</p></a>`;
     })
     .join("");
 
   const content = `
-  <header class="border-b-4 border-ink bg-bubblegum">
+  <header class="border-b-4 border-ink bg-teal">
     <div class="mx-auto max-w-5xl px-4 py-10 sm:py-14">
       <p class="tag bg-paper">Taxonomy</p>
       <h1 class="mt-4 text-4xl font-black uppercase tracking-tight sm:text-6xl">Categories</h1>
@@ -1145,13 +1259,13 @@ function categoriesIndex(categories, latest) {
 function tagsIndex(tags, latest) {
   const chips = tags
     .map(
-      (tag, index) =>
-        `<a class="group inline-flex items-center gap-2 border-[3px] border-ink ${ACCENTS[index % ACCENTS.length]} px-3 py-2 font-black shadow-brutal-sm transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-brutal" href="/tags/${tag.slug}/"><span>#${esc(tag.name)}</span><span class="border-l-2 border-ink pl-2 font-mono text-[11px]">${tag.posts.length}</span></a>`,
+      (tag) =>
+        `<a class="group inline-flex items-center gap-2 border-2 border-ink bg-paper px-3 py-1.5 font-mono text-xs transition-colors hover:bg-acid" href="/tags/${tag.slug}/"><span>#${esc(tag.name)}</span><span class="text-ink/50 group-hover:text-ink">${tag.posts.length}</span></a>`,
     )
     .join("");
 
   const content = `
-  <header class="border-b-4 border-ink bg-sky">
+  <header class="border-b-4 border-ink bg-mist">
     <div class="mx-auto max-w-5xl px-4 py-10 sm:py-14">
       <p class="tag bg-paper">Taxonomy</p>
       <h1 class="mt-4 text-4xl font-black uppercase tracking-tight sm:text-6xl">Tags</h1>
@@ -1160,7 +1274,7 @@ function tagsIndex(tags, latest) {
     </div>
   </header>
   <div class="mx-auto max-w-5xl px-4 py-10">
-    <div class="flex flex-wrap gap-3">${chips}</div>
+    <div class="flex flex-wrap gap-2">${chips}</div>
   </div>`;
 
   return layout({
@@ -1177,12 +1291,12 @@ function seriesIndex(series, latest) {
   const cards = series
     .map(
       (item) =>
-        `<a class="group border-[3px] border-ink bg-paper p-5 shadow-brutal transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-brutal-lg" href="/series/${item.slug}/"><div class="flex items-start justify-between gap-3"><span class="tag bg-tangerine">Series</span><span class="font-mono text-xs">${item.posts.length}</span></div><p class="mt-5 text-2xl font-black uppercase tracking-tight">${esc(item.name)}</p><p class="mt-1 font-mono text-[11px] uppercase text-ink/60">Browse posts →</p></a>`,
+        `<a class="group border-[3px] border-ink bg-paper p-5 shadow-brutal-sm transition-all hover:-translate-y-0.5 hover:shadow-brutal" href="/series/${item.slug}/"><span class="block h-1.5 w-12 bg-teal"></span><div class="mt-4 flex flex-wrap items-baseline justify-between gap-2"><p class="text-2xl font-black uppercase tracking-tight">${esc(item.name)}</p><span class="font-mono text-[11px] text-ink/60">${item.posts.length} post${item.posts.length === 1 ? "" : "s"}</span></div><p class="mt-1 font-mono text-[11px] uppercase tracking-wide text-ink/60 group-hover:text-ink">Browse →</p></a>`,
     )
     .join("");
 
   const content = `
-  <header class="border-b-4 border-ink bg-tangerine">
+  <header class="border-b-4 border-ink bg-aqua">
     <div class="mx-auto max-w-5xl px-4 py-10 sm:py-14">
       <p class="tag bg-paper">Taxonomy</p>
       <h1 class="mt-4 text-4xl font-black uppercase tracking-tight sm:text-6xl">Series</h1>
@@ -1208,10 +1322,10 @@ function termPage(term, kind, latest) {
   const isCategory = kind === "categories";
   const isSeries = kind === "series";
   const accent = isCategory
-    ? "bg-bubblegum"
+    ? "bg-teal"
     : isSeries
-      ? "bg-tangerine"
-      : "bg-sky";
+      ? "bg-aqua"
+      : "bg-mist";
   const label = isCategory ? "Category" : isSeries ? "Series" : "Tag";
   const plural = isCategory ? "Categories" : isSeries ? "Series" : "Tags";
   const heading = isCategory || isSeries ? esc(term.name) : `#${esc(term.name)}`;
@@ -1228,7 +1342,7 @@ function termPage(term, kind, latest) {
   </header>
   <div class="mx-auto max-w-4xl px-4 py-10">
     <div class="space-y-4">${rows}</div>
-    <div class="mt-8"><a class="font-black underline decoration-4 decoration-acid underline-offset-4 hover:bg-acid" href="/${kind}/">← All ${plural.toLowerCase()}</a></div>
+    <div class="mt-8"><a class="font-black underline decoration-4 decoration-teal underline-offset-4 hover:bg-acid" href="/${kind}/">← All ${plural.toLowerCase()}</a></div>
   </div>`;
 
   return layout({
@@ -1290,6 +1404,62 @@ function cdata(value) {
   return String(value).replace(/]]>/g, "]]]]><![CDATA[>");
 }
 
+const FEED_MONO =
+  "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace";
+
+/**
+ * RSS readers do not load our stylesheet, and many of them still do not
+ * support <details>. Flatten accordions, inline the alert styles, unwrap
+ * galleries, and add a reply-by-email button so the feed reads well anywhere.
+ */
+function feedContent(post) {
+  let html = post.html;
+
+  html = html.replace(/<a class="heading-anchor"[^>]*>#<\/a>/g, "");
+
+  html = html.replace(
+    /<details class="neo-details"[^>]*>\s*<summary>([\s\S]*?)<\/summary>\s*<div class="neo-details-body">([\s\S]*?)<\/div>\s*<\/details>/g,
+    (_, summary, body) =>
+      `<div style="border:2px solid #101314;padding:12px 14px;margin:16px 0"><p style="margin:0 0 8px;font-family:${FEED_MONO};font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em">${summary}</p>${body}</div>`,
+  );
+
+  html = html.replace(
+    /<div class="neo-alert neo-alert-(\w+)"><p class="neo-alert-label">([^<]*)<\/p><div class="neo-alert-body">([\s\S]*?)<\/div><\/div>/g,
+    (_, kind, label, body) => {
+      const warm = kind === "caution" || kind === "warning" || kind === "edit";
+      const background = warm ? "#ffe3d9" : "#e2f5f5";
+      const rule = warm ? "#d1502f" : "#009bad";
+      return `<div style="border:2px solid #101314;border-left:8px solid ${rule};background:${background};padding:12px 14px;margin:16px 0"><p style="margin:0 0 8px;font-family:${FEED_MONO};font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#0b4f56">${label}</p>${body}</div>`;
+    },
+  );
+
+  html = html.replace(
+    /<div class="neo-carousel"[^>]*>\s*<p class="neo-carousel-hint"[^>]*>[\s\S]*?<\/p>\s*<div class="neo-carousel-track">([\s\S]*?)<\/div>\s*<\/div>/g,
+    "$1",
+  );
+  html = html.replace(
+    /<div class="neo-gallery"[^>]*>([\s\S]*?)<\/div>/g,
+    "$1",
+  );
+
+  html = html
+    .replace(/<figure class="neo-figure">/g, "<figure>")
+    .replace(/<div class="neo-accordion">/g, "<div>")
+    .replace(
+      /<div class="neo-table-wrap">/g,
+      '<div style="overflow-x:auto;margin:16px 0">',
+    )
+    .replace(/<figure>/g, '<figure style="margin:16px 0">')
+    .replace(/<img /g, '<img style="max-width:100%;height:auto;border:2px solid #101314" ');
+
+  return `${html}${feedReplyCta(post)}`;
+}
+
+function feedReplyCta(post) {
+  const subject = encodeURIComponent(`Re: ${post.title}`);
+  return `<div style="margin:28px 0 8px;padding:16px;border:2px solid #101314;background:#ffd447"><p style="margin:0 0 10px;font-family:${FEED_MONO};font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.12em">Got thoughts?</p><a href="mailto:${SITE.email}?subject=${subject}" style="display:inline-block;border:2px solid #101314;background:#fffdf6;padding:8px 14px;font-family:${FEED_MONO};font-size:13px;font-weight:700;text-decoration:none;color:#101314">Reply by email →</a></div>`;
+}
+
 function buildRss(posts, feedUrl, feedTitle, feedDescription) {
   const latest = posts[0]?.date || new Date();
 
@@ -1305,7 +1475,7 @@ function buildRss(posts, feedUrl, feedTitle, feedDescription) {
       <guid isPermaLink="true">${xmlEscape(`${SITE.url}${post.url}`)}</guid>
       <pubDate>${post.date.toUTCString()}</pubDate>
       <description>${xmlEscape(post.summary)}</description>
-      <content:encoded><![CDATA[${cdata(absolutize(post.html, post.url))}]]></content:encoded>
+      <content:encoded><![CDATA[${cdata(absolutize(feedContent(post), post.url))}]]></content:encoded>
 ${categories}
     </item>`;
     })
@@ -1359,8 +1529,8 @@ function manifest() {
       description: SITE.description,
       start_url: "/",
       display: "standalone",
-      background_color: "#FFF8E7",
-      theme_color: "#FFD23F",
+      background_color: "#fbfaf4",
+      theme_color: "#009bad",
       icons: [
         {
           src: "/android-chrome-192x192.png",
@@ -1548,9 +1718,10 @@ function build() {
     });
   }
 
-  // Standalone pages.
+  // Standalone pages. The Attic stays reachable by URL but out of the sitemap.
   for (const page of pages) {
     writePage(page.url, pagePage(page));
+    if (page.isAttic) continue;
     sitemap.push({
       loc: `${SITE.url}${page.url}`,
       lastmod: isoDate(page.date),

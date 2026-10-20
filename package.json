@@ -9,7 +9,8 @@
     "css": "mkdir -p dist/assets && tailwindcss -i src/input.css -o dist/assets/style.css --minify",
     "build": "npm run generate && npm run css",
     "serve": "node scripts/serve.mjs",
-    "check": "node scripts/check-links.mjs",
+    "check": "node scripts/check-links.mjs && node scripts/check-feed.mjs",
+    "check:feed": "node scripts/check-feed.mjs",
     "dev": "npm run build && npm run serve"
   },
   "keywords": [

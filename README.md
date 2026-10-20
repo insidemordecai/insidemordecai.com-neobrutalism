@@ -20,7 +20,8 @@ Then open <http://localhost:4173>.
 | `npm run generate` | Generates HTML only (no CSS) |
 | `npm run css` | Compiles `src/input.css` to `dist/assets/style.css` |
 | `npm run serve` | Serves `dist/` at <http://localhost:4173> |
-| `npm run check` | Checks internal links, images, anchors, alt text, and duplicate IDs |
+| `npm run check` | Checks links, assets, anchors, alt text, IDs, and the RSS feeds |
+| `npm run check:feed` | Validates the generated RSS feeds only |
 | `npm run dev` | Build, then serve |
 
 ## Project structure
@@ -35,6 +36,7 @@ src/input.css         Tailwind theme, components, article typography
 build.mjs             static site generator and page templates
 scripts/serve.mjs     dependency-free preview server
 scripts/check-links.mjs
+scripts/check-feed.mjs
 dist/                 generated output (git-ignored)
 ```
 
@@ -56,7 +58,22 @@ It also handles the Hugo shortcodes used by the original content:
 - `{{< ref >}}` → internal links
 - `{{< alert >}}` → bordered callout boxes
 - `{{< accordion >}}` / `{{< accordionItem >}}` → native `<details>` elements
-- `{{< carousel >}}` → a CSS grid gallery
+- `{{< carousel >}}` → a CSS image grid
+
+GitHub-style callouts (`> [!NOTE]`, `> [!CAUTION]`, and friends) are converted into the same callout component, so both syntaxes render properly.
+
+### Image galleries
+
+A run of two or more Markdown images at the end of a post is automatically collected:
+
+- 2–4 images → a two-column grid
+- 5+ images → a scroll-snap carousel with no JavaScript
+
+Override the choice per post in the front matter:
+
+```yaml
+gallery: carousel   # or grid, or off
+```
 
 Post images stay relative (`img/photo.webp`) and are copied to `dist/<slug>/img/`, so the clean URLs keep working. Feed content is rewritten with absolute URLs.
 
@@ -85,12 +102,47 @@ Site-wide details — domain, title, email, social links, Open Graph image — l
 
 The visual language is deliberately simple and loud:
 
-- **Palette:** warm paper `#FFF8E7`, ink `#111111`, acid yellow `#FFD23F`, sky `#6EE7F2`, bubblegum `#FF90E8`, lime `#B8F24A`, tangerine `#FF8A3D`, grape `#B69CFF`, tomato `#FF5C5C`.
-- **Shape:** 3–4 px black borders, hard offset shadows, square corners, rotated stickers, visible focus outlines.
+- **Palette:** warm paper `#FBFAF4`, ink `#101314`, and a teal-led accent set built around the original brand colour `#009BAD` — pale mist `#D8F1F1`, aqua `#83E3E8`, acid yellow `#FFD447`, coral `#FF7F5F`, lime `#C9F27A`, blush `#FFD9C9`. Dark mode uses deeper versions of the same hues.
+- **Shape:** 3–4 px hard borders, offset shadows, square corners, rotated stickers, visible focus outlines.
 - **Type:** system sans and system mono stacks. No web fonts are downloaded.
 - **Background:** a CSS grid instead of the original Unsplash image.
 - **Interaction:** CSS hover/active transforms only. No JavaScript, no theme toggle, no search box.
+- **Dark mode:** automatic, based on `prefers-color-scheme`. There is no toggle and no JavaScript involved.
 - **Accessibility:** skip link, semantic landmarks, one `h1` per page, alt text from Markdown, `aria-current` navigation, and reduced-motion support.
+
+## Testing the RSS feed
+
+Build and validate the feed:
+
+```sh
+npm run build
+npm run check:feed
+```
+
+`check:feed` verifies that both feeds contain every post, full content, absolute URLs, a reply-by-email button, and no markup that feed readers cannot render (collapsed `<details>`, site-only classes, raw shortcodes).
+
+To read the feed the way a subscriber would:
+
+1. Run `npm run serve` and open <http://localhost:4173/index.xml>, or add that URL to a local reader such as NetNewsWire or Vienna.
+2. For local testing with working images and links, build against localhost first:
+
+   ```sh
+   SITE_URL=http://localhost:4173 npm run build
+   npm run serve
+   ```
+
+3. Point the reader at <http://localhost:4173/index.xml>. Rebuild without `SITE_URL` before deploying.
+
+Feed-specific behavior:
+
+- Accordions are flattened, so TL;DR content is always visible in readers that ignore `<details>`.
+- Alerts and tables get inline styles, since readers do not load the site stylesheet.
+- Galleries and carousels become stacked figures.
+- Every item ends with a **Reply by email** button carrying a `Re: <post title>` subject.
+
+## Private pages
+
+`content/attic/` is generated at its normal URL (currently `/it-support/`) but is excluded from the sitemap, RSS feeds, navigation, footer, and search indexing. It carries `<meta name="robots" content="noindex">` and is not linked from any public page. Note that this is obscurity, not authentication: anyone with the URL can read it. If it needs real protection, put the path behind Cloudflare Access or a password-protected host.
 
 ## No third-party resources
 
