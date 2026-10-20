@@ -31,7 +31,7 @@ content/              Markdown posts and pages (the source of truth)
   posts/              one folder per post, optional img/ inside
   about/ links/ ...   standalone pages
 assets/img/           profile and Open Graph image
-assets/site.js        local search and back-to-top enhancements
+assets/site.js        local search, mobile navigation, and back-to-top enhancements
 static/               favicons, CNAME, manifest source
 src/input.css         Tailwind theme, components, article typography
 build.mjs             static site generator and page templates
@@ -111,13 +111,14 @@ Site-wide details — domain, title, email, social links, Open Graph image — l
 The visual language is deliberately simple and loud:
 
 - **Palette:** warm canvas `#F4F0E6`, paper cards `#FFFDF7`, ink `#101314`, and a teal-led accent set built around the original brand colour `#009BAD` — pale mist `#D8F1F1`, aqua `#7CE7EC`, acid yellow `#FFD447`, coral `#FF8A6B`, lime `#C9F27A`, blush `#FFD9C9`, and purple `#B79CFF`. Dark mode keeps a near-black canvas but uses the same bright accent surfaces with fixed dark ink, so purple, teal, coral, and lime stay vivid rather than turning muddy.
-- **Category colour codes:** Technical is purple, Opinion is coral, Updates is lime, and Web is aqua. The colours repeat in home cards, category badges, category headers, and post date blocks. Post lists keep categories muted so they do not compete with the titles.
+- **Category colour codes:** Technical is purple, Opinion is coral, Updates is lime, and Web is aqua. The colours repeat in home cards, category badges, and category headers. Post lists keep categories muted so they do not compete with the titles.
 - **Shape:** 3–4 px hard borders, offset shadows, square corners, rotated stickers, visible focus outlines.
 - **Type:** system sans and system mono stacks. No web fonts are downloaded.
 - **Background:** a CSS grid instead of the original Unsplash image.
 - **Home layout:** the recent-post cards use prominent category tags, while the category grid shows every category until it would overflow eight tiles. Past that point, the last tile becomes “All N categories” instead of showing a redundant button.
-- **Interaction:** CSS hover/active transforms, a keyboard-accessible search dialog, and a floating back-to-top control. No theme toggle and no client-side framework.
-- **Dark mode:** automatic, based on `prefers-color-scheme`. There is no toggle; the small script only handles search and the back-to-top state.
+- **Navigation:** desktop keeps the initials, inline links, and search. On small screens the full name, search icon, and a three-line menu toggle stay visible; the links expand into a full-width panel with dashed dividers.
+- **Interaction:** CSS hover/active transforms, a keyboard-accessible search dialog, a collapsible mobile menu, and a back-to-top control that appears after scrolling. No theme toggle and no client-side framework.
+- **Dark mode:** automatic, based on `prefers-color-scheme`. There is no toggle; the small script only handles search, the mobile menu, and the back-to-top state.
 - **Accessibility:** skip link, semantic landmarks, one `h1` per page, alt text from Markdown, `aria-current` navigation, native `<dialog>` focus handling, keyboard shortcuts, and reduced-motion support.
 
 ## Testing the RSS feed
@@ -159,7 +160,7 @@ Feed-specific behavior:
 The page loads only:
 
 - `/assets/style.css` (compiled locally by Tailwind)
-- `/assets/site.js` (local search and back-to-top behaviour)
+- `/assets/site.js` (local search, mobile navigation, and back-to-top behaviour)
 - local images and favicons
 - `/search-index.json` when you open, hover, or focus the search control
 - an optional local RSS feed
