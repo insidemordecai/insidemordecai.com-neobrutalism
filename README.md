@@ -1,6 +1,6 @@
 # insidemordecai.com — neobrutalist clone
 
-A static, neobrutalist rebuild of [insidemordecai.com](https://insidemordecai.com). It keeps all 54 posts, the standalone pages, categories, tags, series, pagination, RSS, and the old URL aliases — but drops Hugo, Blowfish, analytics, and every third-party runtime request.
+A static, neobrutalist rebuild of [insidemordecai.com](https://insidemordecai.com). It keeps all published posts, the standalone pages, categories, tags, series, pagination, RSS, and the old URL aliases — but drops Hugo, Blowfish, analytics, and every third-party runtime request.
 
 The output is plain HTML, one locally compiled Tailwind stylesheet, a small local script for search and navigation, and local images. There is no CDN, no web font, no tracking script, and no client-side framework.
 

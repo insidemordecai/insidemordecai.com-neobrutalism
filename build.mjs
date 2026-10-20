@@ -1315,7 +1315,7 @@ function categoriesIndex(categories, latest) {
     <div class="mx-auto max-w-5xl px-4 py-10 sm:py-14">
       <p class="tag bg-paper">Taxonomy</p>
       <h1 class="mt-4 text-4xl font-black uppercase tracking-tight sm:text-6xl">Categories</h1>
-      <p class="mt-3 max-w-2xl font-bold">The broad strokes. Four buckets, no sophisticated filing system.</p>
+      <p class="mt-3 max-w-2xl font-bold">The broad strokes. ${categories.length} buckets, no sophisticated filing system.</p>
       <div class="mt-5 flex flex-wrap gap-2"><a class="chip" href="/posts/">All posts</a><a class="chip" href="/tags/">Tags →</a></div>
     </div>
   </header>
