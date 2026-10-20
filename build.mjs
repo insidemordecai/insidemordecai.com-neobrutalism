@@ -1,0 +1,1654 @@
+#!/usr/bin/env node
+/**
+ * Static site generator for the neobrutalist insidemordecai.com clone.
+ *
+ * Reads the Markdown in content/, writes plain HTML to dist/.
+ * No runtime dependencies, no client-side JavaScript, no third-party requests.
+ */
+
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { marked } from "marked";
+
+const ROOT = path.dirname(fileURLToPath(import.meta.url));
+const CONTENT_DIR = path.join(ROOT, "content");
+const DIST_DIR = path.join(ROOT, "dist");
+const ASSETS_DIR = path.join(ROOT, "assets");
+const STATIC_DIR = path.join(ROOT, "static");
+
+const PAGE_SIZE = 20;
+const POSTS_PER_HOME = 6;
+
+const SITE = {
+  url: "https://insidemordecai.com",
+  title: "Mordecai Kipng’etich",
+  tagline: "welcome to my corner of the internet about everything",
+  description:
+    "Personal website and blog about tech, media, books, music, homelabs, and life in Kenya.",
+  email: "mk@insidemordecai.com",
+  location: "Nakuru / Nairobi, Kenya",
+  license: "CC BY-NC-SA 4.0",
+  licenseUrl: "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  repo: "https://github.com/insidemordecai/insidemordecai.com",
+};
+
+const SOCIALS = [
+  {
+    label: "Spotify",
+    href: "https://open.spotify.com/user/jv19tenfbkqd9so7369kfvwxa?si=29415d195d8d41f4",
+    color: "bg-lime",
+  },
+  {
+    label: "Bluesky",
+    href: "https://bsky.app/profile/insidemordecai.com",
+    color: "bg-sky",
+  },
+  {
+    label: "Threads",
+    href: "https://threads.net/insidemordecai",
+    color: "bg-bubblegum",
+  },
+  { label: "X", href: "https://x.com/insidemordecai", color: "bg-paper" },
+  {
+    label: "GitHub",
+    href: "https://github.com/insidemordecai",
+    color: "bg-acid",
+  },
+  {
+    label: "Goodreads",
+    href: "https://goodreads.com/insidemordecai",
+    color: "bg-tangerine",
+  },
+];
+
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+const MONTHS_SHORT = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
+const ACCENTS = [
+  "bg-acid",
+  "bg-sky",
+  "bg-bubblegum",
+  "bg-lime",
+  "bg-tangerine",
+  "bg-grape",
+];
+
+const CATEGORY_ACCENTS = {
+  technical: "bg-sky",
+  opinion: "bg-bubblegum",
+  updates: "bg-lime",
+  web: "bg-grape",
+};
+
+const PAGE_ACCENTS = {
+  about: "bg-sky",
+  links: "bg-bubblegum",
+  subscribe: "bg-lime",
+  colophon: "bg-grape",
+  contact: "bg-tangerine",
+  support: "bg-acid",
+  attic: "bg-tomato",
+};
+
+marked.setOptions({ gfm: true, breaks: false });
+
+/* -------------------------------------------------------------------------- */
+/* Utilities                                                                  */
+/* -------------------------------------------------------------------------- */
+
+const esc = (value = "") =>
+  String(value).replace(/[&<>"']/g, (char) => {
+    switch (char) {
+      case "&":
+        return "&amp;";
+      case "<":
+        return "&lt;";
+      case ">":
+        return "&gt;";
+      case '"':
+        return "&quot;";
+      default:
+        return "&#39;";
+    }
+  });
+
+function decodeEntities(value = "") {
+  return String(value)
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;|&#x27;/g, "'")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&mdash;/g, "—")
+    .replace(/&ndash;/g, "–")
+    .replace(/&hellip;/g, "…")
+    .replace(/&rsquo;/g, "’")
+    .replace(/&lsquo;/g, "‘")
+    .replace(/&ldquo;/g, "“")
+    .replace(/&rdquo;/g, "”")
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, code) =>
+      String.fromCharCode(parseInt(code, 16)),
+    );
+}
+
+const stripTags = (value = "") => String(value).replace(/<[^>]*>/g, "");
+
+function slugify(value = "") {
+  return (
+    String(value)
+      .toLowerCase()
+      .normalize("NFKD")
+      .replace(/['’]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "section"
+  );
+}
+
+function formatDate(date) {
+  return `${date.getUTCDate()} ${MONTHS[date.getUTCMonth()]} ${date.getUTCFullYear()}`;
+}
+
+function formatDateShort(date) {
+  return `${date.getUTCDate()} ${MONTHS_SHORT[date.getUTCMonth()]} ${date.getUTCFullYear()}`;
+}
+
+function isoDate(date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function countWords(markdown) {
+  return String(markdown)
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/`[^`]*`/g, " ")
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/[#>*_~`-]+/g, " ")
+    .split(/\s+/)
+    .filter(Boolean).length;
+}
+
+const readingTime = (words) => Math.max(1, Math.ceil(words / 200));
+
+function excerptFromHtml(html, length = 170) {
+  const match = String(html).match(/<p>([\s\S]*?)<\/p>/);
+  if (!match) return "";
+  const text = decodeEntities(stripTags(match[1])).replace(/\s+/g, " ").trim();
+  if (text.length <= length) return text;
+  return `${text.slice(0, length).replace(/\s+\S*$/, "")}…`;
+}
+
+function hashString(value) {
+  let hash = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    hash = (hash * 31 + value.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash);
+}
+
+function getAttr(attrs, name) {
+  const match = String(attrs).match(
+    new RegExp(`\\b${name}=(?:"([^"]*)"|'([^']*)')`),
+  );
+  return match ? (match[1] ?? match[2]) : undefined;
+}
+
+function uniqueSlug(text, used) {
+  const base = slugify(text);
+  const count = used.get(base) || 0;
+  used.set(base, count + 1);
+  return count === 0 ? base : `${base}-${count + 1}`;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Front matter                                                               */
+/* -------------------------------------------------------------------------- */
+
+function splitList(value) {
+  const parts = [];
+  let current = "";
+  let quote = null;
+
+  for (const char of value) {
+    if (quote) {
+      if (char === quote) quote = null;
+      else current += char;
+    } else if (char === '"' || char === "'") {
+      quote = char;
+    } else if (char === ",") {
+      parts.push(current.trim());
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+
+  if (current.trim()) parts.push(current.trim());
+  return parts
+    .map((part) => part.replace(/^["']|["']$/g, ""))
+    .filter(Boolean);
+}
+
+function parseYamlValue(raw) {
+  const value = String(raw).trim();
+  if (value === "") return "";
+  if (value === "true") return true;
+  if (value === "false") return false;
+  if (/^-?\d+(\.\d+)?$/.test(value)) return Number(value);
+
+  if (value.startsWith("[") && value.endsWith("]")) {
+    return splitList(value.slice(1, -1).trim());
+  }
+
+  if (
+    (value.startsWith('"') && value.endsWith('"')) ||
+    (value.startsWith("'") && value.endsWith("'"))
+  ) {
+    return value.slice(1, -1).replace(/\\"/g, '"');
+  }
+
+  return value;
+}
+
+function parseFrontMatter(raw) {
+  const match = String(raw).match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
+  if (!match) return { data: {}, body: raw };
+
+  const data = {};
+  let lastKey = null;
+
+  for (const line of match[1].split(/\r?\n/)) {
+    if (!line.trim() || line.trim().startsWith("#")) continue;
+
+    const listItem = line.match(/^\s+-\s+(.*)$/);
+    if (listItem && lastKey) {
+      if (!Array.isArray(data[lastKey])) {
+        data[lastKey] = data[lastKey] ? [data[lastKey]] : [];
+      }
+      data[lastKey].push(parseYamlValue(listItem[1]));
+      continue;
+    }
+
+    if (/^\s/.test(line) && lastKey && typeof data[lastKey] === "string") {
+      data[lastKey] = `${data[lastKey]} ${line.trim()}`.trim();
+      continue;
+    }
+
+    const separator = line.indexOf(":");
+    if (separator === -1) continue;
+
+    const key = line.slice(0, separator).trim();
+    const value = line.slice(separator + 1).trim();
+    data[key] = value === "" ? [] : parseYamlValue(value);
+    lastKey = key;
+  }
+
+  return { data, body: raw.slice(match[0].length) };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Content discovery                                                          */
+/* -------------------------------------------------------------------------- */
+
+function findContentFiles(dir) {
+  const files = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) files.push(...findContentFiles(fullPath));
+    else if (entry.name === "index.md") files.push(fullPath);
+  }
+  return files;
+}
+
+function asArray(value) {
+  if (Array.isArray(value)) return value.filter(Boolean);
+  if (value === undefined || value === null || value === "") return [];
+  return [value];
+}
+
+function loadContent() {
+  const files = findContentFiles(CONTENT_DIR);
+  const items = [];
+
+  for (const file of files) {
+    const raw = fs.readFileSync(file, "utf8");
+    const { data, body } = parseFrontMatter(raw);
+
+    if (data.draft === true) continue;
+
+    const rel = path.relative(CONTENT_DIR, file).split(path.sep).join("/");
+    const section = rel.split("/")[0];
+    const dir = path.dirname(file);
+    const isPost = section === "posts";
+    const isAttic = section === "attic";
+    const fallbackSlug = path
+      .basename(dir)
+      .replace(/^\d{6}-/, "");
+    const slug = String(data.slug || (isPost ? fallbackSlug : section));
+    const url = isPost || isAttic ? `/${slug}/` : `/${section}/`;
+
+    const date = new Date(data.date);
+    if (Number.isNaN(date.getTime())) {
+      console.warn(`  ! invalid or missing date: ${rel}`);
+    }
+
+    items.push({
+      file,
+      dir,
+      rel,
+      section,
+      type: isPost ? "post" : "page",
+      isAttic,
+      slug,
+      url,
+      title: String(data.title || slug),
+      summary: String(data.summary || data.description || ""),
+      description: String(data.description || data.summary || ""),
+      date: Number.isNaN(date.getTime()) ? new Date(0) : date,
+      categories: asArray(data.categories).map(String),
+      tags: asArray(data.tags).map(String),
+      series: asArray(data.series).map(String),
+      aliases: asArray(data.aliases).map(String),
+      body,
+      html: "",
+      toc: [],
+      readingTime: 1,
+      wordCount: 0,
+    });
+  }
+
+  items.sort((a, b) => b.date - a.date || a.title.localeCompare(b.title));
+  return items;
+}
+
+function buildRefMap(items) {
+  const map = new Map();
+
+  for (const item of items) {
+    const keys = new Set([
+      item.rel,
+      item.rel.replace(/\/index\.md$/, ""),
+      item.rel.replace(/^content\//, ""),
+      item.rel.replace(/^content\//, "").replace(/\/index\.md$/, ""),
+    ]);
+
+    if (item.type === "post") {
+      keys.add(`posts/${path.basename(item.dir)}`);
+      keys.add(`posts/${path.basename(item.dir)}/index.md`);
+      keys.add(item.slug);
+      keys.add(`${item.slug}/`);
+    }
+
+    for (const key of keys) map.set(key, item.url);
+  }
+
+  return map;
+}
+
+function resolveRef(raw, refMap) {
+  let key = String(raw).trim().replace(/^\.?\//, "");
+  if (key.startsWith("content/")) key = key.slice("content/".length);
+
+  const candidates = [
+    key,
+    key.replace(/\/index\.md$/, ""),
+    key.replace(/\.md$/, ""),
+  ];
+
+  for (const candidate of candidates) {
+    if (refMap.has(candidate)) return refMap.get(candidate);
+  }
+
+  console.warn(`  ! unresolved ref: ${raw}`);
+  return "#";
+}
+
+/* -------------------------------------------------------------------------- */
+/* Markdown rendering                                                         */
+/* -------------------------------------------------------------------------- */
+
+const REF_RE = /\{\{<\s*ref\s*"?([^">\s]+)"?\s*>\}\}/g;
+const ALERT_RE =
+  /\{\{<\s*alert(?:\s+"([^"]*)")?\s*>\}\}([\s\S]*?)\{\{<\s*\/\s*alert\s*>\}\}/g;
+const ACCORDION_RE =
+  /\{\{<\s*accordion\s*>\}\}([\s\S]*?)\{\{<\s*\/\s*accordion\s*>\}\}/g;
+const ACCORDION_ITEM_RE =
+  /\{\{<\s*accordionItem\s+title="([^"]*)"(?:\s+open=(true|false))?\s*>\}\}([\s\S]*?)\{\{<\s*\/\s*accordionItem\s*>\}\}/g;
+const CAROUSEL_RE = /\{\{<\s*carousel\s+images="([^"]+)"\s*>\}\}/g;
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function resolveGlob(dir, pattern) {
+  const parts = String(pattern).split("/");
+  const namePattern = parts.pop();
+  let base = dir;
+
+  for (const part of parts) base = path.join(base, part);
+  if (!fs.existsSync(base)) return [];
+
+  const matcher = new RegExp(
+    `^${namePattern.split("*").map(escapeRegExp).join(".*")}$`,
+  );
+
+  return fs
+    .readdirSync(base)
+    .filter((file) => matcher.test(file))
+    .sort()
+    .map((file) => path.join(base, file));
+}
+
+function renderGallery(pattern, item) {
+  const files = resolveGlob(item.dir, pattern);
+  if (files.length === 0) return "";
+
+  const images = files
+    .map((file) => {
+      const relative = path
+        .relative(item.dir, file)
+        .split(path.sep)
+        .join("/");
+      const alt = path
+        .basename(file, path.extname(file))
+        .replace(/[-_]+/g, " ");
+      return `<img src="${esc(relative)}" alt="${esc(alt)}" loading="lazy" decoding="async">`;
+    })
+    .join("");
+
+  return `<div class="neo-gallery">${images}</div>`;
+}
+
+function renderMarkdown(markdown, item, refMap) {
+  let source = String(markdown);
+
+  // Resolve Hugo ref shortcodes to real URLs.
+  source = source.replace(REF_RE, (_, ref) => resolveRef(ref, refMap));
+
+  const blocks = [];
+
+  // Hugo alert shortcodes -> neobrutalist callouts.
+  source = source.replace(ALERT_RE, (_, type, inner) => {
+    const isEdit = (type || "").toLowerCase() === "edit";
+    const label = isEdit ? "Work in progress" : "Note";
+    const tone = isEdit ? "neo-alert-edit" : "neo-alert-note";
+    const index = blocks.length;
+    const bodyHtml = marked.parse(inner.trim());
+    blocks.push(
+      `<div class="neo-alert ${tone}"><p class="neo-alert-label">${label}</p><div class="neo-alert-body">${bodyHtml}</div></div>`,
+    );
+    return `\n\n%%NEO_BLOCK_${index}%%\n\n`;
+  });
+
+  // Hugo accordion shortcodes -> native <details> elements.
+  source = source.replace(ACCORDION_RE, (_, inner) => {
+    const index = blocks.length;
+    const details = inner.replace(
+      ACCORDION_ITEM_RE,
+      (__, title, open, itemBody) => {
+        const isOpen = open === "true";
+        const bodyHtml = marked.parse(itemBody.trim());
+        return `<details class="neo-details"${isOpen ? " open" : ""}><summary>${esc(title)}</summary><div class="neo-details-body">${bodyHtml}</div></details>`;
+      },
+    );
+    blocks.push(`<div class="neo-accordion">${details}</div>`);
+    return `\n\n%%NEO_BLOCK_${index}%%\n\n`;
+  });
+
+  // Hugo carousel shortcode -> CSS-only image grid.
+  source = source.replace(CAROUSEL_RE, (_, pattern) => {
+    const index = blocks.length;
+    const gallery = renderGallery(pattern, item);
+    if (!gallery) return "";
+    blocks.push(gallery);
+    return `\n\n%%NEO_BLOCK_${index}%%\n\n`;
+  });
+
+  // Drop any remaining shortcodes so they never leak into the final HTML.
+  source = source
+    .replace(/\{\{[<%][\s\S]*?[%>]\}\}/g, "")
+    .replace(/<!--\s*more\s*-->/gi, "");
+
+  let html = marked.parse(source);
+  if (typeof html !== "string") html = String(html);
+
+  // Re-insert the HTML blocks generated above.
+  html = html
+    .replace(
+      /<p>\s*%%NEO_BLOCK_(\d+)%%\s*<\/p>/g,
+      (_, index) => blocks[Number(index)] || "",
+    )
+    .replace(/%%NEO_BLOCK_(\d+)%%/g, (_, index) => blocks[Number(index)] || "");
+
+  const { html: withIds, toc } = addHeadingIds(html);
+  html = enhanceImages(withIds);
+  html = wrapTables(html);
+  html = addExternalRel(html);
+
+  return { html, toc };
+}
+
+function addHeadingIds(html) {
+  const toc = [];
+  const used = new Map();
+
+  const output = html.replace(
+    /<h([1-6])([^>]*)>([\s\S]*?)<\/h\1>/g,
+    (match, level, attrs, inner) => {
+      const levelNumber = Number(level);
+      const existingId = getAttr(attrs, "id");
+      const text = decodeEntities(stripTags(inner)).replace(/\s+/g, " ").trim();
+      const id = existingId || uniqueSlug(text, used);
+
+      if ((levelNumber === 2 || levelNumber === 3) && text) {
+        toc.push({ level: levelNumber, text, id });
+      }
+
+      if (existingId) return match;
+
+      return `<h${level}${attrs} id="${esc(id)}">${inner}<a class="heading-anchor" href="#${esc(id)}" aria-label="Link to this section">#</a></h${level}>`;
+    },
+  );
+
+  return { html: output, toc };
+}
+
+function enhanceImages(html) {
+  let output = html.replace(/<img\b([^>]*?)\/?>/g, (match, attrs) => {
+    const src = getAttr(attrs, "src");
+    if (!src) return match;
+
+    const title = getAttr(attrs, "title");
+    let clean = attrs
+      .replace(/\s+title=("[^"]*"|'[^']*')/, "")
+      .replace(/\s*\/\s*$/, "");
+
+    if (!/\bloading=/.test(clean)) clean += ' loading="lazy"';
+    if (!/\bdecoding=/.test(clean)) clean += ' decoding="async"';
+
+    const image = `<img${clean}>`;
+    if (!title) return image;
+
+    return `<figure class="neo-figure">${image}<figcaption>${title}</figcaption></figure>`;
+  });
+
+  // A standalone image should not sit inside a paragraph (invalid HTML).
+  output = output
+    .replace(
+      /<p>\s*(<figure class="neo-figure">[\s\S]*?<\/figure>)\s*<\/p>/g,
+      "$1",
+    )
+    .replace(/<p>\s*(<img\b[^>]*>)\s*<\/p>/g, "$1");
+
+  return output;
+}
+
+function wrapTables(html) {
+  return html
+    .replace(/<table>/g, '<div class="neo-table-wrap"><table>')
+    .replace(/<\/table>/g, "</table></div>");
+}
+
+function addExternalRel(html) {
+  return html.replace(/<a\b([^>]*)>/g, (match, attrs) => {
+    if (!/\bhref="https?:\/\//.test(attrs)) return match;
+    if (/\brel=/.test(attrs)) return match;
+    return `<a${attrs} rel="noopener noreferrer">`;
+  });
+}
+
+/* -------------------------------------------------------------------------- */
+/* Shared template fragments                                                  */
+/* -------------------------------------------------------------------------- */
+
+function accentFor(post) {
+  const category = (post.categories[0] || "").toLowerCase();
+  return (
+    CATEGORY_ACCENTS[category] ||
+    ACCENTS[hashString(post.slug) % ACCENTS.length]
+  );
+}
+
+function categoryTags(post, onAccent = false) {
+  return post.categories
+    .map((category, index) => {
+      const color = onAccent
+        ? "bg-paper"
+        : CATEGORY_ACCENTS[category.toLowerCase()] ||
+          ACCENTS[index % ACCENTS.length];
+      return `<a class="tag ${color} transition-shadow hover:shadow-brutal-sm" href="/categories/${slugify(category)}/">${esc(category)}</a>`;
+    })
+    .join("");
+}
+
+function tagChips(post, limit = 99) {
+  return post.tags
+    .slice(0, limit)
+    .map(
+      (tag) =>
+        `<a class="tag bg-paper transition-colors hover:bg-acid" href="/tags/${slugify(tag)}/">#${esc(tag)}</a>`,
+    )
+    .join("");
+}
+
+function seriesTags(post, onAccent = false) {
+  return post.series
+    .map(
+      (name) =>
+        `<a class="tag ${onAccent ? "bg-paper" : "bg-grape"} transition-shadow hover:shadow-brutal-sm" href="/series/${slugify(name)}/">Series: ${esc(name)}</a>`,
+    )
+    .join("");
+}
+
+function socialChips() {
+  return SOCIALS.map(
+    (social) =>
+      `<a class="social-chip ${social.color}" href="${social.href}" rel="me">${esc(social.label)} <span aria-hidden="true">↗</span></a>`,
+  ).join("");
+}
+
+function footerSocials() {
+  return SOCIALS.map(
+    (social) =>
+      `<a class="border-2 border-paper/30 px-2 py-1 font-mono text-[10px] uppercase tracking-wide transition-colors hover:border-acid hover:text-acid" href="${social.href}" rel="me">${esc(social.label)}</a>`,
+  ).join("");
+}
+
+function tocBox(toc) {
+  if (toc.length < 2) return "";
+
+  const links = toc
+    .map(
+      (heading) =>
+        `<li class="${heading.level === 3 ? "pl-4" : ""}"><a class="toc-link" href="#${esc(heading.id)}">${esc(heading.text)}</a></li>`,
+    )
+    .join("");
+
+  return `<nav aria-label="Table of contents" class="border-[3px] border-ink bg-paper p-4 shadow-brutal-sm"><p class="font-black uppercase tracking-tight">On this page</p><ul class="mt-3 max-h-[calc(100vh-12rem)] space-y-1.5 overflow-auto text-sm">${links}</ul></nav>`;
+}
+
+function replyCta(title) {
+  const subject = encodeURIComponent(`Re: ${title}`);
+  return `<div class="mt-12 border-[3px] border-ink bg-acid p-6 shadow-brutal sm:flex sm:items-center sm:justify-between sm:gap-6"><div><p class="text-xl font-black uppercase tracking-tight">Got thoughts?</p><p class="mt-1 text-sm font-bold">Reply by email — I read everything.</p></div><a class="btn mt-4 bg-paper sm:mt-0" href="mailto:${SITE.email}?subject=${subject}">Reply by email →</a></div>`;
+}
+
+function postCard(post) {
+  return `<article class="card group flex h-full flex-col p-5"><div class="flex flex-wrap items-center justify-between gap-2"><div class="flex flex-wrap gap-1">${categoryTags(post)}</div><time class="font-mono text-[11px]" datetime="${isoDate(post.date)}">${formatDateShort(post.date)}</time></div><h3 class="mt-4 text-xl font-black leading-tight tracking-tight"><a class="decoration-4 decoration-acid underline-offset-4 group-hover:underline" href="${post.url}">${esc(post.title)}</a></h3><p class="mt-2 text-sm leading-relaxed text-ink/75">${esc(post.summary)}</p><div class="mt-auto pt-5"><div class="flex items-center justify-between border-t-2 border-dashed border-ink/30 pt-3"><span class="font-mono text-[11px] uppercase">${post.readingTime} min read</span><span class="text-sm font-black">Read →</span></div></div></article>`;
+}
+
+function postRow(post) {
+  return `<article class="group grid gap-4 border-[3px] border-ink bg-paper p-4 shadow-brutal transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-brutal-lg sm:grid-cols-[96px_minmax(0,1fr)] sm:p-5"><div class="flex items-center gap-3 sm:flex-col sm:items-start sm:gap-1"><div class="border-2 border-ink ${accentFor(post)} px-2 py-1 text-center font-mono text-xs font-black uppercase"><span class="block text-xl leading-none">${post.date.getUTCDate()}</span><span>${MONTHS_SHORT[post.date.getUTCMonth()]}</span></div><span class="font-mono text-xs text-ink/60">${post.date.getUTCFullYear()}</span></div><div class="min-w-0"><div class="flex flex-wrap items-center gap-2">${categoryTags(post)}<span class="font-mono text-[11px] uppercase text-ink/60">${post.readingTime} min read</span></div><h3 class="mt-2 text-xl font-black leading-tight tracking-tight sm:text-2xl"><a class="decoration-4 decoration-acid underline-offset-4 group-hover:underline" href="${post.url}">${esc(post.title)}</a></h3><p class="mt-1.5 text-sm leading-relaxed text-ink/75">${esc(post.summary)}</p><div class="mt-3 flex flex-wrap gap-1.5">${tagChips(post, 4)}</div></div></article>`;
+}
+
+function pager(currentPage, totalPages, base = "/posts/") {
+  if (totalPages <= 1) return "";
+
+  const pageUrl = (page) => (page === 1 ? base : `${base}page/${page}/`);
+  const pageLinks = [];
+
+  for (let page = 1; page <= totalPages; page += 1) {
+    pageLinks.push(
+      `<a class="inline-flex h-10 min-w-10 items-center justify-center border-[3px] border-ink px-3 font-mono text-sm font-black ${page === currentPage ? "bg-ink text-paper" : "bg-paper hover:bg-acid"}" href="${pageUrl(page)}"${page === currentPage ? ' aria-current="page"' : ""}>${page}</a>`,
+    );
+  }
+
+  return `<nav aria-label="Pagination" class="mt-10 flex flex-wrap items-center justify-between gap-3 border-t-4 border-ink pt-6"><a class="btn bg-paper ${currentPage === 1 ? "pointer-events-none opacity-40" : ""}" href="${pageUrl(Math.max(1, currentPage - 1))}"${currentPage === 1 ? ' aria-disabled="true"' : ""}>← Newer</a><div class="flex flex-wrap gap-2">${pageLinks.join("")}</div><a class="btn bg-paper ${currentPage === totalPages ? "pointer-events-none opacity-40" : ""}" href="${pageUrl(Math.min(totalPages, currentPage + 1))}"${currentPage === totalPages ? ' aria-disabled="true"' : ""}>Older →</a></nav>`;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Layout                                                                     */
+/* -------------------------------------------------------------------------- */
+
+function layout({
+  title = "",
+  description = "",
+  urlPath = "/",
+  nav = "",
+  content = "",
+  ogType = "website",
+  published = "",
+  noIndex = false,
+}) {
+  const fullTitle = title
+    ? `${title} · ${SITE.title}`
+    : `${SITE.title} · ${SITE.tagline}`;
+  const metaDescription = description || SITE.description;
+  const canonical = `${SITE.url}${urlPath}`;
+  const ogImage = `${SITE.url}/assets/img/social-image.webp`;
+  const year = new Date().getFullYear();
+
+  const navItems = [
+    ["about", "About", "/about/"],
+    ["posts", "Posts", "/posts/"],
+    ["links", "Links", "/links/"],
+    ["subscribe", "Subscribe", "/subscribe/"],
+  ];
+
+  const navHtml = navItems
+    .map(
+      ([key, label, href]) =>
+        `<a class="nav-link" href="${href}"${nav === key ? ' aria-current="page"' : ""}>${label}</a>`,
+    )
+    .join("");
+
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${esc(fullTitle)}</title>
+  <meta name="description" content="${esc(metaDescription)}">
+  <meta name="author" content="${esc(SITE.title)}">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#FFD23F">
+  <link rel="canonical" href="${esc(canonical)}">
+  <link rel="stylesheet" href="/assets/style.css">
+  <link rel="alternate" type="application/rss+xml" title="${esc(SITE.title)}" href="${SITE.url}/index.xml">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta property="og:type" content="${esc(ogType)}">
+  <meta property="og:title" content="${esc(title || SITE.title)}">
+  <meta property="og:description" content="${esc(metaDescription)}">
+  <meta property="og:url" content="${esc(canonical)}">
+  <meta property="og:site_name" content="${esc(SITE.title)}">
+  <meta property="og:image" content="${esc(ogImage)}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${esc(title || SITE.title)}">
+  <meta name="twitter:description" content="${esc(metaDescription)}">
+  <meta name="twitter:image" content="${esc(ogImage)}">
+  ${published && ogType === "article" ? `<meta property="article:published_time" content="${esc(published)}">` : ""}
+  ${noIndex ? '<meta name="robots" content="noindex">' : ""}
+</head>
+<body class="flex min-h-screen flex-col bg-paper font-sans text-ink antialiased">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="sticky top-0 z-50 border-b-4 border-ink bg-paper/95 backdrop-blur">
+    <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-3">
+      <a class="group flex items-center gap-3" href="/" aria-label="Home">
+        <span class="grid h-10 w-10 place-items-center border-[3px] border-ink bg-acid font-black shadow-brutal-sm transition-transform group-hover:-rotate-3">MK</span>
+        <span class="hidden leading-tight sm:block">
+          <span class="block text-sm font-black uppercase tracking-tight">${esc(SITE.title)}</span>
+          <span class="block font-mono text-[10px] uppercase tracking-widest text-ink/60">insidemordecai.com</span>
+        </span>
+      </a>
+      <nav aria-label="Main" class="flex flex-wrap items-center gap-1 text-xs font-bold sm:text-sm">${navHtml}</nav>
+    </div>
+  </header>
+  <main id="main" class="flex-1">${content}</main>
+  <footer class="border-t-4 border-ink bg-ink text-paper">
+    <div class="mx-auto grid max-w-6xl gap-10 px-4 py-12 md:grid-cols-[1.2fr_1fr_1fr]">
+      <div>
+        <div class="flex items-center gap-3">
+          <span class="grid h-11 w-11 place-items-center border-[3px] border-paper bg-acid font-black text-ink">MK</span>
+          <div>
+            <p class="font-black uppercase tracking-tight">${esc(SITE.title)}</p>
+            <p class="font-mono text-xs text-paper/60">insidemordecai.com</p>
+          </div>
+        </div>
+        <p class="mt-4 max-w-xs text-sm leading-relaxed text-paper/75">STEM instructor, freelance software developer, and CS graduate in Kenya. Writing about tech, media, books, music, homelabs, and life.</p>
+        <p class="mt-4 inline-block border-2 border-paper/30 px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-paper/60">Made in Kenya</p>
+        <div class="mt-5 flex flex-wrap gap-2">${footerSocials()}</div>
+      </div>
+      <div>
+        <p class="font-mono text-xs uppercase tracking-widest text-acid">Explore</p>
+        <ul class="mt-3 space-y-2 text-sm font-bold">
+          <li><a class="hover:text-acid hover:underline" href="/posts/">All posts</a></li>
+          <li><a class="hover:text-acid hover:underline" href="/categories/">Categories</a></li>
+          <li><a class="hover:text-acid hover:underline" href="/tags/">Tags</a></li>
+          <li><a class="hover:text-acid hover:underline" href="/series/">Series</a></li>
+          <li><a class="hover:text-acid hover:underline" href="/links/">Links</a></li>
+          <li><a class="hover:text-acid hover:underline" href="/it-support/">Attic</a></li>
+        </ul>
+      </div>
+      <div>
+        <p class="font-mono text-xs uppercase tracking-widest text-acid">Site</p>
+        <ul class="mt-3 space-y-2 text-sm font-bold">
+          <li><a class="hover:text-acid hover:underline" href="/about/">About</a></li>
+          <li><a class="hover:text-acid hover:underline" href="/subscribe/">Subscribe</a></li>
+          <li><a class="hover:text-acid hover:underline" href="/colophon/">Colophon</a></li>
+          <li><a class="hover:text-acid hover:underline" href="/contact/">Contact</a></li>
+          <li><a class="hover:text-acid hover:underline" href="/support/">Support</a></li>
+          <li><a class="hover:text-acid hover:underline" href="/index.xml">RSS feed</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="border-t-2 border-paper/20">
+      <div class="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-5 font-mono text-[11px] text-paper/60 sm:flex-row sm:items-center sm:justify-between">
+        <p>© ${year} ${esc(SITE.title)} · <a class="hover:text-acid hover:underline" href="${SITE.licenseUrl}" rel="noopener noreferrer">${SITE.license}</a></p>
+        <p>No trackers. No ads. No third-party requests.</p>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>`;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Page templates                                                             */
+/* -------------------------------------------------------------------------- */
+
+function homePage(posts, categories) {
+  const recent = posts.slice(0, POSTS_PER_HOME);
+  const latest = posts[0]?.date || new Date();
+
+  const categoryCards = categories
+    .map((category, index) => {
+      const accent =
+        CATEGORY_ACCENTS[category.name.toLowerCase()] ||
+        ACCENTS[index % ACCENTS.length];
+      return `<a class="group border-[3px] border-ink bg-paper p-4 shadow-brutal transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-brutal-lg" href="/categories/${category.slug}/"><div class="flex items-center justify-between gap-3"><span class="tag ${accent}">${category.posts.length} post${category.posts.length === 1 ? "" : "s"}</span><span class="font-mono text-sm" aria-hidden="true">→</span></div><p class="mt-4 text-lg font-black uppercase tracking-tight">${esc(category.name)}</p><p class="mt-1 font-mono text-[11px] uppercase text-ink/60">Browse category</p></a>`;
+    })
+    .join("");
+
+  const content = `
+  <section class="relative overflow-hidden border-b-4 border-ink">
+    <div class="relative mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:py-16 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-center">
+      <div>
+        <div class="flex flex-wrap gap-2">
+          <span class="tag bg-acid">Personal website</span>
+          <span class="tag bg-sky">Blog</span>
+          <span class="tag bg-paper">Since 2022</span>
+        </div>
+        <h1 class="mt-6 break-words text-[2.65rem] font-black uppercase leading-[0.88] tracking-tighter sm:text-7xl">Mordecai<br><span class="bg-acid px-1">Kipng’etich</span></h1>
+        <p class="mt-5 max-w-xl text-xl font-bold leading-snug sm:text-2xl">${esc(SITE.tagline)}</p>
+        <p class="mt-3 max-w-xl text-base leading-relaxed text-ink/80">STEM instructor, freelance software developer, and CS graduate in Kenya. I write about tech, media, books, music, homelabs, and the occasional tangent.</p>
+        <div class="mt-6 flex flex-wrap gap-2">${socialChips()}</div>
+        <div class="mt-6 flex flex-wrap gap-3">
+          <a class="btn" href="/posts/">Read the blog →</a>
+          <a class="btn bg-paper" href="/about/">About me</a>
+        </div>
+      </div>
+      <div class="relative mx-auto w-full max-w-[320px]">
+        <div class="rotate-2 border-4 border-ink bg-sky p-3 shadow-brutal">
+          <img src="/assets/img/profile.webp" alt="${esc(SITE.title)}" width="1080" height="1080" class="aspect-square w-full border-[3px] border-ink object-cover" fetchpriority="high">
+          <p class="mt-3 border-2 border-ink bg-paper px-2 py-1 text-center font-mono text-[10px] uppercase tracking-widest">${esc(SITE.location)}</p>
+        </div>
+        <span class="absolute -bottom-8 left-2 rotate-[-4deg] border-[3px] border-ink bg-acid px-3 py-2 text-xs font-black uppercase shadow-brutal-sm">not from Regular Show</span>
+        <span class="absolute -right-3 -top-3 rotate-6 border-[3px] border-ink bg-bubblegum px-2 py-1 font-mono text-[10px] font-black uppercase shadow-brutal-sm">hello!</span>
+      </div>
+    </div>
+  </section>
+  <section class="mx-auto max-w-6xl px-4 py-12 sm:py-16">
+    <div class="flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <p class="font-mono text-xs uppercase tracking-widest text-ink/60">Fresh off the keyboard</p>
+        <h2 class="text-3xl font-black uppercase tracking-tight sm:text-4xl">Recent posts</h2>
+      </div>
+      <a class="btn w-full justify-center bg-paper sm:w-auto" href="/posts/">All ${posts.length} posts →</a>
+    </div>
+    <div class="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">${recent.map(postCard).join("")}</div>
+  </section>
+  <section class="border-y-4 border-ink bg-bubblegum/25">
+    <div class="mx-auto max-w-6xl px-4 py-12 sm:py-16">
+      <div class="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p class="font-mono text-xs uppercase tracking-widest text-ink/60">Pick a rabbit hole</p>
+          <h2 class="text-3xl font-black uppercase tracking-tight sm:text-4xl">Browse by category</h2>
+        </div>
+        <a class="btn w-full justify-center bg-paper sm:w-auto" href="/categories/">All categories →</a>
+      </div>
+      <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">${categoryCards}</div>
+    </div>
+  </section>
+  <section class="mx-auto max-w-6xl px-4 py-12 sm:py-16">
+    <div class="grid gap-6 border-[3px] border-ink bg-acid p-6 shadow-brutal sm:p-8 lg:grid-cols-[1fr_auto] lg:items-center">
+      <div>
+        <p class="font-mono text-xs uppercase tracking-widest">Say hello</p>
+        <h2 class="mt-2 text-2xl font-black uppercase tracking-tight sm:text-3xl">Got a link, a book, or a bug to share?</h2>
+        <p class="mt-2 max-w-xl text-sm font-bold">Email is the most reliable way to reach me. I read everything.</p>
+      </div>
+      <div class="flex flex-wrap gap-3">
+        <a class="btn bg-paper" href="/contact/">Contact me →</a>
+        <a class="btn bg-ink text-paper" href="/subscribe/">Subscribe</a>
+      </div>
+    </div>
+  </section>`;
+
+  return layout({
+    title: "",
+    description: SITE.description,
+    urlPath: "/",
+    nav: "",
+    content,
+    published: isoDate(latest),
+  });
+}
+
+function postsPage(posts, page, totalPages, categories) {
+  const start = (page - 1) * PAGE_SIZE;
+  const pagePosts = posts.slice(start, start + PAGE_SIZE);
+  const latest = posts[0]?.date || new Date();
+
+  const groups = new Map();
+  for (const post of pagePosts) {
+    const year = post.date.getUTCFullYear();
+    if (!groups.has(year)) groups.set(year, []);
+    groups.get(year).push(post);
+  }
+
+  const rows = [...groups.entries()]
+    .map(
+      ([year, yearPosts]) => `<section class="mt-10 first:mt-0"><div class="flex items-center gap-3"><h2 class="border-[3px] border-ink bg-ink px-3 py-1 font-mono text-lg font-black text-paper shadow-brutal-sm">${year}</h2><div class="h-[3px] flex-1 bg-ink"></div><span class="font-mono text-[11px] uppercase text-ink/60">${yearPosts.length} post${yearPosts.length === 1 ? "" : "s"}</span></div><div class="mt-5 space-y-4">${yearPosts.map(postRow).join("")}</div></section>`,
+    )
+    .join("");
+
+  const categoryLinks = categories
+    .map(
+      (category) =>
+        `<a class="tag bg-paper transition-colors hover:bg-acid" href="/categories/${category.slug}/">${esc(category.name)} <span class="ml-1 font-mono">${category.posts.length}</span></a>`,
+    )
+    .join("");
+
+  const title = page === 1 ? "Posts" : `Posts — page ${page}`;
+  const content = `
+  <header class="border-b-4 border-ink bg-lime">
+    <div class="mx-auto max-w-6xl px-4 py-10 sm:py-14">
+      <p class="tag bg-paper">Archive</p>
+      <h1 class="mt-4 text-4xl font-black uppercase tracking-tight sm:text-6xl">All posts</h1>
+      <p class="mt-3 max-w-2xl font-bold">${posts.length} posts about tech, media, books, music, homelabs, and life. No algorithms, no infinite scroll.</p>
+      <div class="mt-5 flex flex-wrap items-center gap-2 font-mono text-xs"><span class="chip">Page ${page} / ${totalPages}</span><span class="chip">${PAGE_SIZE} per page</span></div>
+    </div>
+  </header>
+  <div class="mx-auto max-w-4xl px-4 py-10">
+    <div class="mb-8 flex flex-wrap items-center gap-2"><span class="font-mono text-[11px] uppercase tracking-widest text-ink/60">Jump to</span>${categoryLinks}</div>
+    ${rows}
+    ${pager(page, totalPages)}
+  </div>`;
+
+  return layout({
+    title,
+    description: `All ${posts.length} posts on ${SITE.title} — tech, media, books, music, homelabs, and life.`,
+    urlPath: page === 1 ? "/posts/" : `/posts/page/${page}/`,
+    nav: "posts",
+    content,
+    published: isoDate(latest),
+  });
+}
+
+function postPage(post, allPosts) {
+  const index = allPosts.findIndex((item) => item.slug === post.slug);
+  const newer = index > 0 ? allPosts[index - 1] : null;
+  const older = index >= 0 && index < allPosts.length - 1 ? allPosts[index + 1] : null;
+  const accent = accentFor(post);
+  const toc = tocBox(post.toc);
+  const hasToc = post.toc.length >= 2;
+
+  const seriesTag = seriesTags(post, true);
+
+  const tagsBlock = `<div class="mt-10 flex flex-wrap items-center gap-2 border-t-4 border-ink pt-6"><span class="font-mono text-xs uppercase tracking-widest">Filed under</span>${categoryTags(post)}${tagChips(post)}</div>`;
+
+  const prevNext = `<nav aria-label="Post navigation" class="mt-10 grid gap-4 sm:grid-cols-2">${
+    newer
+      ? `<a class="card p-5" href="${newer.url}"><p class="font-mono text-[10px] uppercase tracking-widest text-ink/60">← Newer</p><p class="mt-2 font-black leading-tight">${esc(newer.title)}</p></a>`
+      : ""
+  }${
+    older
+      ? `<a class="card p-5 sm:text-right" href="${older.url}"><p class="font-mono text-[10px] uppercase tracking-widest text-ink/60">Older →</p><p class="mt-2 font-black leading-tight">${esc(older.title)}</p></a>`
+      : ""
+  }</nav>`;
+
+  const content = `
+  <header class="border-b-4 border-ink ${accent}">
+    <div class="mx-auto max-w-6xl px-4 py-8 sm:py-12">
+      <nav aria-label="Breadcrumb" class="font-mono text-[11px] uppercase tracking-widest"><a class="underline decoration-2 underline-offset-2 hover:bg-paper" href="/">Home</a> <span aria-hidden="true">/</span> <a class="underline decoration-2 underline-offset-2 hover:bg-paper" href="/posts/">Posts</a> <span aria-hidden="true">/</span> <span class="text-ink/70">${esc(post.title)}</span></nav>
+      <div class="mt-5 flex flex-wrap gap-2">${categoryTags(post, true)}${seriesTag}</div>
+      <h1 class="mt-4 max-w-4xl break-words text-4xl font-black uppercase leading-[0.95] tracking-tight sm:text-5xl lg:text-6xl">${esc(post.title)}</h1>
+      <p class="mt-4 max-w-3xl text-lg font-bold leading-snug">${esc(post.summary)}</p>
+      <div class="mt-6 flex flex-wrap items-center gap-2"><time class="chip" datetime="${isoDate(post.date)}">${formatDate(post.date)}</time><span class="chip">${post.readingTime} min read</span></div>
+    </div>
+  </header>
+  <div class="mx-auto max-w-6xl px-4 py-10">
+    <div class="grid gap-8 ${hasToc ? "lg:grid-cols-[220px_minmax(0,1fr)]" : ""}">
+      ${hasToc ? `<aside class="h-fit lg:sticky lg:top-24">${toc}</aside>` : ""}
+      <div class="min-w-0">
+        <article class="prose-neo max-w-3xl ${hasToc ? "" : "mx-auto"}">${post.html}</article>
+        ${tagsBlock}
+        ${replyCta(post.title)}
+        ${prevNext}
+        <div class="mt-8"><a class="font-black underline decoration-4 decoration-acid underline-offset-4 hover:bg-acid" href="/posts/">← Back to all posts</a></div>
+      </div>
+    </div>
+  </div>`;
+
+  return layout({
+    title: post.title,
+    description: post.description || post.summary,
+    urlPath: post.url,
+    nav: "posts",
+    content,
+    ogType: "article",
+    published: post.date.toISOString(),
+  });
+}
+
+function pageActions(section) {
+  switch (section) {
+    case "about":
+      return `<div class="mt-5 flex flex-wrap gap-2">${socialChips()}</div>`;
+    case "contact":
+      return `<a class="btn mt-5 bg-paper" href="mailto:${SITE.email}">${SITE.email} →</a>`;
+    case "support":
+      return `<div class="mt-5 flex flex-wrap gap-3"><a class="btn bg-paper" href="https://buymeacoffee.com/insidemordecai/" rel="noopener noreferrer">Buy me a coffee ↗</a><a class="btn bg-paper" href="https://ko-fi.com/insidemordecai/" rel="noopener noreferrer">Ko-fi ↗</a><a class="btn bg-ink text-paper" href="https://www.paypal.com/donate/?hosted_button_id=TMKDCYE64F7XW" rel="noopener noreferrer">PayPal ↗</a></div>`;
+    case "subscribe":
+      return `<a class="btn mt-5 bg-paper" href="/index.xml">Open RSS feed ↗</a>`;
+    case "colophon":
+      return `<a class="btn mt-5 bg-paper" href="${SITE.repo}" rel="noopener noreferrer">View source ↗</a>`;
+    case "links":
+      return `<a class="btn mt-5 bg-paper" href="mailto:${SITE.email}?subject=Link%20suggestion">Suggest a link →</a>`;
+    default:
+      return "";
+  }
+}
+
+function pagePage(item) {
+  const accent = PAGE_ACCENTS[item.section] || "bg-acid";
+  const toc = tocBox(item.toc);
+  const hasToc = item.toc.length >= 2;
+  const label = item.section === "attic" ? "Attic" : "Page";
+  const withReply = item.section === "links" || item.section === "attic";
+
+  const content = `
+  <header class="border-b-4 border-ink ${accent}">
+    <div class="mx-auto max-w-5xl px-4 py-10 sm:py-14">
+      <p class="tag bg-paper">${label}</p>
+      <h1 class="mt-4 break-words text-4xl font-black uppercase leading-[0.95] tracking-tight sm:text-6xl">${esc(item.title)}</h1>
+      ${item.summary ? `<p class="mt-4 max-w-2xl text-lg font-bold">${esc(item.summary)}</p>` : ""}
+      ${pageActions(item.section)}
+    </div>
+  </header>
+  <div class="mx-auto max-w-5xl px-4 py-10">
+    <div class="grid gap-8 ${hasToc ? "lg:grid-cols-[minmax(0,1fr)_240px]" : ""}">
+      ${hasToc ? `<aside class="h-fit lg:order-2 lg:sticky lg:top-24">${toc}</aside>` : ""}
+      <div class="min-w-0 lg:order-1">
+        <article class="prose-neo max-w-3xl ${hasToc ? "" : "mx-auto"}">${item.html}</article>
+        ${withReply ? replyCta(item.title) : ""}
+      </div>
+    </div>
+  </div>`;
+
+  return layout({
+    title: item.title,
+    description: item.description || item.summary,
+    urlPath: item.url,
+    nav: item.section,
+    content,
+    published: isoDate(item.date),
+  });
+}
+
+function categoriesIndex(categories, latest) {
+  const cards = categories
+    .map((category, index) => {
+      const accent =
+        CATEGORY_ACCENTS[category.name.toLowerCase()] ||
+        ACCENTS[index % ACCENTS.length];
+      return `<a class="group border-[3px] border-ink bg-paper p-5 shadow-brutal transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-brutal-lg" href="/categories/${category.slug}/"><div class="flex items-start justify-between gap-3"><span class="tag ${accent}">Category</span><span class="font-mono text-xs">${category.posts.length}</span></div><p class="mt-5 text-2xl font-black uppercase tracking-tight">${esc(category.name)}</p><p class="mt-1 font-mono text-[11px] uppercase text-ink/60">Browse posts →</p></a>`;
+    })
+    .join("");
+
+  const content = `
+  <header class="border-b-4 border-ink bg-bubblegum">
+    <div class="mx-auto max-w-5xl px-4 py-10 sm:py-14">
+      <p class="tag bg-paper">Taxonomy</p>
+      <h1 class="mt-4 text-4xl font-black uppercase tracking-tight sm:text-6xl">Categories</h1>
+      <p class="mt-3 max-w-2xl font-bold">The broad strokes. Four buckets, no sophisticated filing system.</p>
+      <div class="mt-5 flex flex-wrap gap-2"><a class="chip" href="/posts/">All posts</a><a class="chip" href="/tags/">Tags →</a></div>
+    </div>
+  </header>
+  <div class="mx-auto max-w-5xl px-4 py-10">
+    <div class="grid gap-5 sm:grid-cols-2">${cards}</div>
+  </div>`;
+
+  return layout({
+    title: "Categories",
+    description: "Browse posts by category.",
+    urlPath: "/categories/",
+    nav: "posts",
+    content,
+    published: isoDate(latest),
+  });
+}
+
+function tagsIndex(tags, latest) {
+  const chips = tags
+    .map(
+      (tag, index) =>
+        `<a class="group inline-flex items-center gap-2 border-[3px] border-ink ${ACCENTS[index % ACCENTS.length]} px-3 py-2 font-black shadow-brutal-sm transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-brutal" href="/tags/${tag.slug}/"><span>#${esc(tag.name)}</span><span class="border-l-2 border-ink pl-2 font-mono text-[11px]">${tag.posts.length}</span></a>`,
+    )
+    .join("");
+
+  const content = `
+  <header class="border-b-4 border-ink bg-sky">
+    <div class="mx-auto max-w-5xl px-4 py-10 sm:py-14">
+      <p class="tag bg-paper">Taxonomy</p>
+      <h1 class="mt-4 text-4xl font-black uppercase tracking-tight sm:text-6xl">Tags</h1>
+      <p class="mt-3 max-w-2xl font-bold">The specific stuff. ${tags.length} tags and counting.</p>
+      <div class="mt-5 flex flex-wrap gap-2"><a class="chip" href="/posts/">All posts</a><a class="chip" href="/categories/">Categories →</a></div>
+    </div>
+  </header>
+  <div class="mx-auto max-w-5xl px-4 py-10">
+    <div class="flex flex-wrap gap-3">${chips}</div>
+  </div>`;
+
+  return layout({
+    title: "Tags",
+    description: "Browse posts by tag.",
+    urlPath: "/tags/",
+    nav: "posts",
+    content,
+    published: isoDate(latest),
+  });
+}
+
+function seriesIndex(series, latest) {
+  const cards = series
+    .map(
+      (item) =>
+        `<a class="group border-[3px] border-ink bg-paper p-5 shadow-brutal transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-brutal-lg" href="/series/${item.slug}/"><div class="flex items-start justify-between gap-3"><span class="tag bg-tangerine">Series</span><span class="font-mono text-xs">${item.posts.length}</span></div><p class="mt-5 text-2xl font-black uppercase tracking-tight">${esc(item.name)}</p><p class="mt-1 font-mono text-[11px] uppercase text-ink/60">Browse posts →</p></a>`,
+    )
+    .join("");
+
+  const content = `
+  <header class="border-b-4 border-ink bg-tangerine">
+    <div class="mx-auto max-w-5xl px-4 py-10 sm:py-14">
+      <p class="tag bg-paper">Taxonomy</p>
+      <h1 class="mt-4 text-4xl font-black uppercase tracking-tight sm:text-6xl">Series</h1>
+      <p class="mt-3 max-w-2xl font-bold">Multi-part collections. A few things are better read in order.</p>
+      <div class="mt-5 flex flex-wrap gap-2"><a class="chip" href="/posts/">All posts</a><a class="chip" href="/tags/">Tags →</a></div>
+    </div>
+  </header>
+  <div class="mx-auto max-w-5xl px-4 py-10">
+    <div class="grid gap-5 sm:grid-cols-2">${cards}</div>
+  </div>`;
+
+  return layout({
+    title: "Series",
+    description: "Browse posts by series.",
+    urlPath: "/series/",
+    nav: "posts",
+    content,
+    published: isoDate(latest),
+  });
+}
+
+function termPage(term, kind, latest) {
+  const isCategory = kind === "categories";
+  const isSeries = kind === "series";
+  const accent = isCategory
+    ? "bg-bubblegum"
+    : isSeries
+      ? "bg-tangerine"
+      : "bg-sky";
+  const label = isCategory ? "Category" : isSeries ? "Series" : "Tag";
+  const plural = isCategory ? "Categories" : isSeries ? "Series" : "Tags";
+  const heading = isCategory || isSeries ? esc(term.name) : `#${esc(term.name)}`;
+  const rows = term.posts.map(postRow).join("");
+
+  const content = `
+  <header class="border-b-4 border-ink ${accent}">
+    <div class="mx-auto max-w-4xl px-4 py-10 sm:py-14">
+      <nav aria-label="Breadcrumb" class="font-mono text-[11px] uppercase tracking-widest"><a class="underline decoration-2 underline-offset-2 hover:bg-paper" href="/">Home</a> <span aria-hidden="true">/</span> <a class="underline decoration-2 underline-offset-2 hover:bg-paper" href="/${kind}/">${plural}</a></nav>
+      <p class="tag mt-5 bg-paper">${label}</p>
+      <h1 class="mt-4 break-words text-4xl font-black uppercase tracking-tight sm:text-6xl">${heading}</h1>
+      <p class="mt-3 font-bold">${term.posts.length} post${term.posts.length === 1 ? "" : "s"} filed under this ${label.toLowerCase()}.</p>
+    </div>
+  </header>
+  <div class="mx-auto max-w-4xl px-4 py-10">
+    <div class="space-y-4">${rows}</div>
+    <div class="mt-8"><a class="font-black underline decoration-4 decoration-acid underline-offset-4 hover:bg-acid" href="/${kind}/">← All ${plural.toLowerCase()}</a></div>
+  </div>`;
+
+  return layout({
+    title: `${label}: ${term.name}`,
+    description: `Posts filed under ${term.name}.`,
+    urlPath: `/${kind}/${term.slug}/`,
+    nav: "posts",
+    content,
+    published: isoDate(latest),
+  });
+}
+
+function notFoundPage() {
+  const content = `
+  <section class="mx-auto grid min-h-[60vh] max-w-4xl place-items-center px-4 py-16">
+    <div class="w-full border-[3px] border-ink bg-acid p-8 text-center shadow-brutal sm:p-12">
+      <p class="font-mono text-xs uppercase tracking-[0.3em]">Dead end</p>
+      <p class="mt-4 text-7xl font-black uppercase leading-none tracking-tighter sm:text-9xl">404</p>
+      <h1 class="mt-4 text-2xl font-black uppercase tracking-tight sm:text-3xl">This page took a wrong turn</h1>
+      <p class="mx-auto mt-3 max-w-md text-sm font-bold">The link is broken, the page moved, or it never existed. Either way, there is no infinite scroll to save us now.</p>
+      <div class="mt-6 flex flex-wrap justify-center gap-3"><a class="btn bg-paper" href="/">Back home →</a><a class="btn bg-ink text-paper" href="/posts/">Browse posts</a></div>
+    </div>
+  </section>`;
+
+  return layout({
+    title: "404 — Page not found",
+    description: "This page could not be found.",
+    urlPath: "/404.html",
+    nav: "",
+    content,
+    noIndex: true,
+  });
+}
+
+/* -------------------------------------------------------------------------- */
+/* Feeds and metadata                                                         */
+/* -------------------------------------------------------------------------- */
+
+function xmlEscape(value = "") {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
+function absolutize(html, basePath) {
+  const base = `${SITE.url}${basePath}`;
+  return String(html)
+    .replace(/(src|href)="\/(?!\/)/g, `$1="${SITE.url}/`)
+    .replace(
+      /(src|href)="(?!https?:|mailto:|tel:|#|\/)([^"]+)"/g,
+      `$1="${base}$2"`,
+    );
+}
+
+function cdata(value) {
+  return String(value).replace(/]]>/g, "]]]]><![CDATA[>");
+}
+
+function buildRss(posts, feedUrl, feedTitle, feedDescription) {
+  const latest = posts[0]?.date || new Date();
+
+  const items = posts
+    .map((post) => {
+      const categories = [...post.categories, ...post.tags, ...post.series]
+        .map((name) => `      <category>${xmlEscape(name)}</category>`)
+        .join("\n");
+
+      return `    <item>
+      <title>${xmlEscape(post.title)}</title>
+      <link>${xmlEscape(`${SITE.url}${post.url}`)}</link>
+      <guid isPermaLink="true">${xmlEscape(`${SITE.url}${post.url}`)}</guid>
+      <pubDate>${post.date.toUTCString()}</pubDate>
+      <description>${xmlEscape(post.summary)}</description>
+      <content:encoded><![CDATA[${cdata(absolutize(post.html, post.url))}]]></content:encoded>
+${categories}
+    </item>`;
+    })
+    .join("\n");
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>${xmlEscape(feedTitle)}</title>
+    <link>${SITE.url}/</link>
+    <description>${xmlEscape(feedDescription)}</description>
+    <language>en</language>
+    <lastBuildDate>${latest.toUTCString()}</lastBuildDate>
+    <copyright>${xmlEscape(`${SITE.license} — ${SITE.title}`)}</copyright>
+    <atom:link href="${xmlEscape(feedUrl)}" rel="self" type="application/rss+xml"/>
+${items}
+  </channel>
+</rss>
+`;
+}
+
+function buildSitemap(entries) {
+  const map = new Map();
+  for (const entry of entries) {
+    const current = map.get(entry.loc);
+    if (!current || (entry.lastmod && entry.lastmod > current)) {
+      map.set(entry.loc, entry.lastmod || "");
+    }
+  }
+
+  const urls = [...map.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(
+      ([loc, lastmod]) =>
+        `  <url><loc>${xmlEscape(loc)}</loc>${lastmod ? `<lastmod>${lastmod}</lastmod>` : ""}</url>`,
+    )
+    .join("\n");
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls}
+</urlset>
+`;
+}
+
+function manifest() {
+  return JSON.stringify(
+    {
+      name: SITE.title,
+      short_name: "Mordecai",
+      description: SITE.description,
+      start_url: "/",
+      display: "standalone",
+      background_color: "#FFF8E7",
+      theme_color: "#FFD23F",
+      icons: [
+        {
+          src: "/android-chrome-192x192.png",
+          sizes: "192x192",
+          type: "image/png",
+        },
+        {
+          src: "/android-chrome-512x512.png",
+          sizes: "512x512",
+          type: "image/png",
+        },
+      ],
+    },
+    null,
+    2,
+  );
+}
+
+function redirectPage(target, title) {
+  const absolute = `${SITE.url}${target}`;
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Redirecting… · ${esc(SITE.title)}</title>
+  <link rel="canonical" href="${esc(absolute)}">
+  <meta name="robots" content="noindex">
+  <meta http-equiv="refresh" content="0; url=${esc(target)}">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body class="grid min-h-screen place-items-center bg-paper p-6 font-sans text-ink">
+  <main class="w-full max-w-lg border-[3px] border-ink bg-acid p-8 text-center shadow-brutal">
+    <p class="font-mono text-xs uppercase tracking-[0.3em]">Moved</p>
+    <h1 class="mt-3 text-3xl font-black uppercase tracking-tight">${esc(title)}</h1>
+    <p class="mt-3 text-sm font-bold">This page now lives at <a class="underline decoration-4 underline-offset-4 hover:bg-paper" href="${esc(target)}">${esc(target)}</a>.</p>
+  </main>
+</body>
+</html>
+`;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Terms                                                                      */
+/* -------------------------------------------------------------------------- */
+
+function collectTerms(posts) {
+  const categories = new Map();
+  const tags = new Map();
+  const series = new Map();
+
+  const add = (map, name, post) => {
+    const slug = slugify(name);
+    if (!map.has(slug)) map.set(slug, { name, slug, posts: [] });
+    map.get(slug).posts.push(post);
+  };
+
+  for (const post of posts) {
+    for (const category of post.categories) add(categories, category, post);
+    for (const tag of post.tags) add(tags, tag, post);
+    for (const name of post.series) add(series, name, post);
+  }
+
+  const sorted = (map) =>
+    [...map.values()].sort(
+      (a, b) => b.posts.length - a.posts.length || a.name.localeCompare(b.name),
+    );
+
+  for (const term of [
+    ...categories.values(),
+    ...tags.values(),
+    ...series.values(),
+  ]) {
+    term.posts.sort((a, b) => b.date - a.date);
+  }
+
+  return {
+    categories: sorted(categories),
+    tags: sorted(tags),
+    series: sorted(series),
+  };
+}
+
+/* -------------------------------------------------------------------------- */
+/* File output                                                                */
+/* -------------------------------------------------------------------------- */
+
+function copyDirContents(source, destination) {
+  if (!fs.existsSync(source)) return;
+  fs.mkdirSync(destination, { recursive: true });
+  for (const entry of fs.readdirSync(source, { withFileTypes: true })) {
+    fs.cpSync(
+      path.join(source, entry.name),
+      path.join(destination, entry.name),
+      { recursive: true },
+    );
+  }
+}
+
+function writePage(urlPath, html) {
+  const clean = urlPath.replace(/^\/+|\/+$/g, "");
+  const dir = clean ? path.join(DIST_DIR, clean) : DIST_DIR;
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, "index.html"), html);
+}
+
+function writeFile(relativePath, contents) {
+  const fullPath = path.join(DIST_DIR, relativePath);
+  fs.mkdirSync(path.dirname(fullPath), { recursive: true });
+  fs.writeFileSync(fullPath, contents);
+}
+
+function normalizeAlias(alias) {
+  const clean = String(alias).replace(/^\/+|\/+$/g, "");
+  return clean ? `/${clean}/` : "/";
+}
+
+/* -------------------------------------------------------------------------- */
+/* Build                                                                      */
+/* -------------------------------------------------------------------------- */
+
+function build() {
+  const startedAt = Date.now();
+  console.log("Building the neobrutalist insidemordecai.com clone…");
+
+  fs.rmSync(DIST_DIR, { recursive: true, force: true });
+  fs.mkdirSync(DIST_DIR, { recursive: true });
+
+  copyDirContents(STATIC_DIR, DIST_DIR);
+  copyDirContents(ASSETS_DIR, path.join(DIST_DIR, "assets"));
+
+  const items = loadContent();
+  const posts = items.filter((item) => item.type === "post");
+  const pages = items.filter((item) => item.type === "page");
+
+  for (const item of items) {
+    item.wordCount = countWords(item.body);
+    item.readingTime = readingTime(item.wordCount);
+  }
+
+  const refMap = buildRefMap(items);
+  for (const item of items) {
+    const rendered = renderMarkdown(item.body, item, refMap);
+    item.html = rendered.html;
+    item.toc = rendered.toc;
+    if (!item.summary) item.summary = excerptFromHtml(item.html);
+  }
+
+  const { categories, tags, series } = collectTerms(posts);
+  const latest = posts[0]?.date || new Date();
+  const latestIso = isoDate(latest);
+  const sitemap = [];
+
+  // Copy post/page images to their clean URLs.
+  for (const item of items) {
+    const imgDir = path.join(item.dir, "img");
+    if (!fs.existsSync(imgDir)) continue;
+
+    const base =
+      item.type === "post" || item.isAttic
+        ? path.join(DIST_DIR, item.slug)
+        : path.join(DIST_DIR, item.section);
+
+    fs.cpSync(imgDir, path.join(base, "img"), { recursive: true });
+  }
+
+  // Home.
+  writePage("/", homePage(posts, categories));
+  sitemap.push({ loc: `${SITE.url}/`, lastmod: latestIso });
+
+  // Post archive with pagination.
+  const totalPages = Math.max(1, Math.ceil(posts.length / PAGE_SIZE));
+  for (let page = 1; page <= totalPages; page += 1) {
+    const pathName = page === 1 ? "/posts/" : `/posts/page/${page}/`;
+    writePage(pathName, postsPage(posts, page, totalPages, categories));
+    sitemap.push({ loc: `${SITE.url}${pathName}`, lastmod: latestIso });
+  }
+
+  // Individual posts.
+  for (const post of posts) {
+    writePage(post.url, postPage(post, posts));
+    sitemap.push({
+      loc: `${SITE.url}${post.url}`,
+      lastmod: isoDate(post.date),
+    });
+  }
+
+  // Standalone pages.
+  for (const page of pages) {
+    writePage(page.url, pagePage(page));
+    sitemap.push({
+      loc: `${SITE.url}${page.url}`,
+      lastmod: isoDate(page.date),
+    });
+  }
+
+  // Taxonomy indexes.
+  writePage("/categories/", categoriesIndex(categories, latest));
+  writePage("/tags/", tagsIndex(tags, latest));
+  writePage("/series/", seriesIndex(series, latest));
+  sitemap.push({ loc: `${SITE.url}/categories/`, lastmod: latestIso });
+  sitemap.push({ loc: `${SITE.url}/tags/`, lastmod: latestIso });
+  sitemap.push({ loc: `${SITE.url}/series/`, lastmod: latestIso });
+
+  // Term pages.
+  for (const category of categories) {
+    const termLatest = isoDate(category.posts[0]?.date || latest);
+    writePage(
+      `/categories/${category.slug}/`,
+      termPage(category, "categories", category.posts[0]?.date || latest),
+    );
+    sitemap.push({
+      loc: `${SITE.url}/categories/${category.slug}/`,
+      lastmod: termLatest,
+    });
+  }
+
+  for (const tag of tags) {
+    const termLatest = isoDate(tag.posts[0]?.date || latest);
+    writePage(
+      `/tags/${tag.slug}/`,
+      termPage(tag, "tags", tag.posts[0]?.date || latest),
+    );
+    sitemap.push({
+      loc: `${SITE.url}/tags/${tag.slug}/`,
+      lastmod: termLatest,
+    });
+  }
+
+  for (const item of series) {
+    const termLatest = isoDate(item.posts[0]?.date || latest);
+    writePage(
+      `/series/${item.slug}/`,
+      termPage(item, "series", item.posts[0]?.date || latest),
+    );
+    sitemap.push({
+      loc: `${SITE.url}/series/${item.slug}/`,
+      lastmod: termLatest,
+    });
+  }
+
+  // Aliases.
+  const aliasTargets = [];
+  for (const item of items) {
+    for (const alias of item.aliases) {
+      const aliasPath = normalizeAlias(alias);
+      if (aliasPath === item.url) continue;
+      writePage(aliasPath, redirectPage(item.url, item.title));
+      aliasTargets.push(`${aliasPath} -> ${item.url}`);
+    }
+  }
+
+  // 404.
+  writeFile("404.html", notFoundPage());
+
+  // Feeds.
+  writeFile(
+    "index.xml",
+    buildRss(
+      posts,
+      `${SITE.url}/index.xml`,
+      SITE.title,
+      SITE.description,
+    ),
+  );
+  writeFile(
+    "posts/index.xml",
+    buildRss(
+      posts,
+      `${SITE.url}/posts/index.xml`,
+      `${SITE.title} — Posts`,
+      SITE.description,
+    ),
+  );
+
+  // Sitemap, robots, manifest.
+  writeFile("sitemap.xml", buildSitemap(sitemap));
+  writeFile(
+    "robots.txt",
+    `User-agent: *\nAllow: /\n\nSitemap: ${SITE.url}/sitemap.xml\n`,
+  );
+  writeFile("site.webmanifest", manifest());
+
+  console.log(
+    `  ${posts.length} posts · ${pages.length} pages · ${categories.length} categories · ${tags.length} tags · ${series.length} series`,
+  );
+  if (aliasTargets.length) console.log(`  ${aliasTargets.length} aliases`);
+  console.log(`  done in ${Date.now() - startedAt}ms — output in dist/`);
+}
+
+build();

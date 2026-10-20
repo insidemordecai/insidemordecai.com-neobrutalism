@@ -1,0 +1,30 @@
+{
+  "name": "insidemordecai-neobrutalism",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A static, neobrutalist clone of insidemordecai.com — HTML, Tailwind CSS, and no client-side JavaScript.",
+  "scripts": {
+    "generate": "node build.mjs",
+    "css": "mkdir -p dist/assets && tailwindcss -i src/input.css -o dist/assets/style.css --minify",
+    "build": "npm run generate && npm run css",
+    "serve": "node scripts/serve.mjs",
+    "check": "node scripts/check-links.mjs",
+    "dev": "npm run build && npm run serve"
+  },
+  "keywords": [
+    "static-site",
+    "neobrutalism",
+    "tailwindcss",
+    "blog"
+  ],
+  "author": "Mordecai Kipng’etich",
+  "license": "CC-BY-NC-SA-4.0",
+  "dependencies": {
+    "marked": "^18.1.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.3",
+    "tailwindcss": "^4.3.3"
+  }
+}
