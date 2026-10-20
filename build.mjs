@@ -33,7 +33,7 @@ const SITE = {
   description:
     "Personal website and blog about tech, media, books, music, homelabs, and life in Kenya.",
   email: "mk@insidemordecai.com",
-  location: "Nakuru / Nairobi, Kenya",
+  location: "Somewhere in Kenya",
   license: "CC BY-NC-SA 4.0",
   licenseUrl: "https://creativecommons.org/licenses/by-nc-sa/4.0/",
   repo: "https://github.com/insidemordecai/insidemordecai.com",
@@ -698,7 +698,7 @@ function renderMarkdown(markdown, item, refMap) {
   const { html: withIds, toc } = addHeadingIds(html);
   html = enhanceImages(withIds);
   html = wrapTables(html);
-  html = addExternalRel(html);
+  html = externalizeLinks(html);
   html = smartDashes(html);
 
   return { html, toc };
@@ -765,11 +765,43 @@ function wrapTables(html) {
     .replace(/<\/table>/g, "</table></div>");
 }
 
-function addExternalRel(html) {
+function externalizeLinks(html) {
   return html.replace(/<a\b([^>]*)>/g, (match, attrs) => {
-    if (!/\bhref="https?:\/\//.test(attrs)) return match;
-    if (/\brel=/.test(attrs)) return match;
-    return `<a${attrs} rel="noopener noreferrer">`;
+    const hrefMatch = attrs.match(/\bhref=(["'])(.*?)\1/i);
+    if (!hrefMatch) return match;
+
+    const href = hrefMatch[2].trim();
+    if (!/^(?:https?:)?\/\//i.test(href)) return match;
+
+    let sameSite = false;
+    try {
+      sameSite = new URL(href, SITE.url).host === new URL(SITE.url).host;
+    } catch {
+      return match;
+    }
+    if (sameSite) return match;
+
+    let next = attrs;
+    if (/\btarget=(["']).*?\1/i.test(next)) {
+      next = next.replace(/\btarget=(["']).*?\1/i, 'target="_blank"');
+    } else {
+      next += ' target="_blank"';
+    }
+
+    const relMatch = next.match(/\brel=(["'])(.*?)\1/i);
+    if (relMatch) {
+      const tokens = relMatch[2].split(/\s+/).filter(Boolean);
+      for (const token of ["noopener", "noreferrer"]) {
+        if (!tokens.some((value) => value.toLowerCase() === token)) {
+          tokens.push(token);
+        }
+      }
+      next = next.replace(relMatch[0], `rel="${tokens.join(" ")}"`);
+    } else {
+      next += ' rel="noopener noreferrer"';
+    }
+
+    return `<a${next}>`;
   });
 }
 
@@ -941,7 +973,7 @@ function layout({
 
   const searchTrigger = `<a class="search-trigger" href="/posts/" data-search-open aria-label="Search posts" aria-haspopup="dialog" aria-controls="search-dialog" aria-keyshortcuts="Meta+K Control+K"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 4.5 4.5"></path></svg><span class="search-keys" aria-hidden="true"><kbd class="search-kbd" data-kbd-mod>Ctrl</kbd><kbd class="search-kbd search-kbd-key">K</kbd></span></a>`;
 
-  return `<!doctype html>
+  return externalizeLinks(`<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -1032,7 +1064,7 @@ function layout({
   </dialog>
   <script src="/assets/site.js" defer></script>
 </body>
-</html>`;
+</html>`);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -1068,14 +1100,10 @@ function homePage(posts, categories) {
           <span class="tag bg-aqua">Blog</span>
           <span class="tag bg-paper">Since 2022</span>
         </div>
-        <h1 class="mt-6 break-words text-[2.65rem] font-black uppercase leading-[0.88] tracking-tighter sm:text-7xl">Hi, I’m<br><span class="mark px-1">Mordz</span></h1>
-        <p class="mt-5 max-w-xl text-xl font-bold leading-snug sm:text-2xl">${esc(SITE.tagline)}</p>
-        <p class="mt-3 max-w-xl text-base leading-relaxed text-ink/80">I’m a STEM instructor and freelance software developer based in Kenya. I write about tech, media, books, music, homelabs, and the occasional tangent.</p>
+        <h1 class="mt-6 break-words text-[2.65rem] font-black uppercase leading-[0.88] tracking-tighter sm:text-7xl">Hi, I’m<br><span class="mark px-1">Mordecai</span></h1>
+        <p class="mt-5 max-w-xl text-lg font-bold leading-snug text-ink/80 sm:text-xl">But you can call me Mordz. ${esc(SITE.tagline)}</p>
+        <p class="mt-3 max-w-xl text-base leading-relaxed text-ink/80">I’m a STEM instructor and freelance software developer. I write about tech, media, books, music, homelabs, and the occasional tangent.</p>
         <div class="mt-6 flex flex-wrap gap-2">${socialChips()}</div>
-        <div class="mt-6 hidden flex-wrap gap-3 sm:flex">
-          <a class="btn" href="/posts/">Read the blog →</a>
-          <a class="btn bg-paper" href="/about/">About me</a>
-        </div>
       </div>
       <div class="relative mx-auto hidden w-full max-w-[320px] md:block">
         <div class="rotate-2 border-4 border-ink bg-aqua p-3 shadow-brutal">
@@ -1083,7 +1111,7 @@ function homePage(posts, categories) {
           <p class="mt-3 border-2 border-ink bg-paper px-2 py-1 text-center font-mono text-[10px] uppercase tracking-widest">${esc(SITE.location)}</p>
         </div>
         <span class="absolute -bottom-8 left-2 rotate-[-4deg] border-[3px] border-ink bg-acid px-3 py-2 text-xs font-black uppercase shadow-brutal-sm">not from Regular Show</span>
-        <span class="absolute -right-3 -top-3 rotate-6 border-[3px] border-ink bg-blush px-2 py-1 font-mono text-[10px] font-black uppercase shadow-brutal-sm">hello!</span>
+        <span class="absolute -right-3 -top-3 rotate-6 border-[3px] border-ink bg-blush px-2 py-1 font-mono text-[10px] font-black shadow-brutal-sm">Heyyy!!!</span>
       </div>
     </div>
   </section>
@@ -1112,10 +1140,11 @@ function homePage(posts, categories) {
     <div class="grid gap-6 border-[3px] border-ink bg-acid p-6 shadow-brutal sm:p-8 lg:grid-cols-[1fr_auto] lg:items-center">
       <div>
         <p class="font-mono text-xs uppercase tracking-widest">Say hello</p>
-        <h2 class="mt-2 text-2xl font-black uppercase tracking-tight sm:text-3xl">Got a link, a book, or a bug to share?</h2>
+        <h2 class="mt-2 text-2xl font-black uppercase tracking-tight sm:text-3xl">Got a project, a question, or just want to chat?</h2>
+        <p class="on-accent-muted mt-3 max-w-xl text-sm font-bold leading-relaxed sm:text-base">If you want to collaborate, share a link or a book, report a bug, or simply say hi, I’m all ears. Also, you can just subscribe if you prefer to keep up quietly.</p>
       </div>
       <div class="flex flex-wrap gap-3">
-        <a class="btn bg-paper" href="/contact/">Contact me →</a>
+        <a class="btn bg-paper" href="/contact/">Get in touch →</a>
         <a class="btn bg-ink text-paper" href="/subscribe/">Subscribe</a>
       </div>
     </div>
