@@ -968,7 +968,7 @@ function layout({
   ${published && ogType === "article" ? `<meta property="article:published_time" content="${esc(published)}">` : ""}
   ${noIndex ? '<meta name="robots" content="noindex">' : ""}
 </head>
-<body class="flex min-h-screen flex-col bg-canvas font-sans text-ink antialiased">
+<body id="top" class="flex min-h-screen flex-col bg-canvas font-sans text-ink antialiased">
   <a class="skip-link" href="#main">Skip to content</a>
   <header class="sticky top-0 z-50 border-b-4 border-ink bg-paper">
     <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-3">
@@ -1007,6 +1007,7 @@ function layout({
       </div>
     </div>
   </footer>
+  <a class="back-to-top" id="back-to-top" href="#top" aria-label="Back to top"><span aria-hidden="true">↑</span><span class="back-to-top-label">Top</span></a>
   <dialog id="search-dialog" class="search-dialog" aria-labelledby="search-dialog-title">
     <div class="search-panel">
       <h2 id="search-dialog-title" class="sr-only">Search posts</h2>
