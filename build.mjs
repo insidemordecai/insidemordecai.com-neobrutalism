@@ -1191,12 +1191,12 @@ function postsPage(posts, page, totalPages, categories) {
     <div class="mx-auto max-w-6xl px-4 py-10 sm:py-14">
       <p class="tag bg-paper">Archive</p>
       <h1 class="mt-4 text-4xl font-black uppercase tracking-tight sm:text-6xl">All posts</h1>
-      <p class="mt-3 max-w-2xl font-bold">${posts.length} posts about tech, media, books, music, homelabs, and life. No algorithms, no infinite scroll.</p>
+      <p class="mt-3 max-w-2xl text-base leading-relaxed opacity-80">${posts.length} posts about tech, media, books, music, homelabs, and life. No algorithms, no infinite scroll.</p>
       <div class="mt-5 flex flex-wrap items-center gap-2 font-mono text-xs"><span class="chip">Page ${page} / ${totalPages}</span><span class="chip">${PAGE_SIZE} per page</span></div>
     </div>
   </header>
   <div class="mx-auto max-w-4xl px-4 py-10">
-    <div class="mb-8 flex flex-wrap items-center gap-x-4 gap-y-2"><span class="font-mono text-[11px] uppercase tracking-widest text-ink/60">Jump to</span>${categoryLinks}</div>
+    <div class="mb-8 hidden flex-wrap items-center gap-x-4 gap-y-2 sm:flex"><span class="font-mono text-[11px] uppercase tracking-widest text-ink/60">Jump to</span>${categoryLinks}</div>
     ${rows}
     ${pager(page, totalPages)}
   </div>`;
@@ -1248,7 +1248,7 @@ function postPage(post, allPosts) {
       <nav aria-label="Breadcrumb" class="font-mono text-[11px] uppercase tracking-widest"><a class="underline decoration-2 underline-offset-2 hover:bg-ink hover:text-paper" href="/">Home</a> <span aria-hidden="true">/</span> <a class="underline decoration-2 underline-offset-2 hover:bg-ink hover:text-paper" href="/posts/">Posts</a></nav>
       ${seriesNav(post, allPosts)}
       <h1 class="mt-5 max-w-4xl break-words text-4xl font-black uppercase leading-[0.95] tracking-tight sm:text-5xl lg:text-6xl">${esc(post.title)}</h1>
-      <p class="mt-4 max-w-3xl text-lg font-bold leading-snug">${esc(post.summary)}</p>
+      <p class="mt-4 max-w-3xl text-base leading-relaxed opacity-80">${esc(post.summary)}</p>
       <div class="${metaTone} mt-6 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] uppercase tracking-widest"><time datetime="${isoDate(post.date)}">${formatDate(post.date)}</time><span aria-hidden="true">·</span><span>${post.readingTime} min read</span></div>
     </div>
   </header>
@@ -1307,7 +1307,7 @@ function pagePage(item) {
     <div class="mx-auto max-w-5xl px-4 py-10 sm:py-14">
       <p class="tag bg-paper">${label}</p>
       <h1 class="mt-4 break-words text-4xl font-black uppercase leading-[0.95] tracking-tight sm:text-6xl">${esc(item.title)}</h1>
-      ${item.hasSummary ? `<p class="mt-4 max-w-2xl text-lg font-bold">${esc(item.summary)}</p>` : ""}
+      ${item.hasSummary ? `<p class="mt-4 max-w-2xl text-base leading-relaxed opacity-80">${esc(item.summary)}</p>` : ""}
       ${pageActions(item.section)}
     </div>
   </header>
@@ -1347,7 +1347,7 @@ function categoriesIndex(categories, latest) {
     <div class="mx-auto max-w-5xl px-4 py-10 sm:py-14">
       <p class="tag bg-paper">Taxonomy</p>
       <h1 class="mt-4 text-4xl font-black uppercase tracking-tight sm:text-6xl">Categories</h1>
-      <p class="mt-3 max-w-2xl font-bold">The broad strokes. ${categories.length} buckets, no sophisticated filing system.</p>
+      <p class="mt-3 max-w-2xl text-base leading-relaxed opacity-80">The broad strokes. ${categories.length} buckets, no sophisticated filing system.</p>
       <div class="mt-5 flex flex-wrap gap-2"><a class="chip" href="/posts/">All posts</a><a class="chip" href="/tags/">Tags →</a></div>
     </div>
   </header>
@@ -1378,7 +1378,7 @@ function tagsIndex(tags, latest) {
     <div class="mx-auto max-w-5xl px-4 py-10 sm:py-14">
       <p class="tag bg-paper">Taxonomy</p>
       <h1 class="mt-4 text-4xl font-black uppercase tracking-tight sm:text-6xl">Tags</h1>
-      <p class="mt-3 max-w-2xl font-bold">The specific stuff. ${tags.length} tags and counting.</p>
+      <p class="mt-3 max-w-2xl text-base leading-relaxed opacity-80">The specific stuff. ${tags.length} tags and counting.</p>
       <div class="mt-5 flex flex-wrap gap-2"><a class="chip" href="/posts/">All posts</a><a class="chip" href="/categories/">Categories →</a></div>
     </div>
   </header>
@@ -1409,7 +1409,7 @@ function seriesIndex(series, latest) {
     <div class="mx-auto max-w-5xl px-4 py-10 sm:py-14">
       <p class="tag bg-paper">Taxonomy</p>
       <h1 class="mt-4 text-4xl font-black uppercase tracking-tight sm:text-6xl">Series</h1>
-      <p class="mt-3 max-w-2xl font-bold">Multi-part collections. A few things are better read in order.</p>
+      <p class="mt-3 max-w-2xl text-base leading-relaxed opacity-80">Multi-part collections. A few things are better read in order.</p>
       <div class="mt-5 flex flex-wrap gap-2"><a class="chip" href="/posts/">All posts</a><a class="chip" href="/tags/">Tags →</a></div>
     </div>
   </header>
@@ -1446,7 +1446,7 @@ function termPage(term, kind, latest) {
       <nav aria-label="Breadcrumb" class="font-mono text-[11px] uppercase tracking-widest"><a class="underline decoration-2 underline-offset-2 hover:bg-ink hover:text-paper" href="/">Home</a> <span aria-hidden="true">/</span> <a class="underline decoration-2 underline-offset-2 hover:bg-ink hover:text-paper" href="/${kind}/">${plural}</a></nav>
       <p class="tag mt-5 bg-paper">${label}</p>
       <h1 class="mt-4 break-words text-4xl font-black uppercase tracking-tight sm:text-6xl">${heading}</h1>
-      <p class="mt-3 font-bold">${term.posts.length} post${term.posts.length === 1 ? "" : "s"} filed under this ${label.toLowerCase()}.</p>
+      <p class="mt-3 text-base leading-relaxed opacity-80">${term.posts.length} post${term.posts.length === 1 ? "" : "s"} filed under this ${label.toLowerCase()}.</p>
     </div>
   </header>
   <div class="mx-auto max-w-4xl px-4 py-10">
