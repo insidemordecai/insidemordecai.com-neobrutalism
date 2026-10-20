@@ -812,13 +812,35 @@ function mutedTagLinks(post, limit = 99) {
     .join("");
 }
 
-function seriesLink(post) {
-  return post.series
-    .map(
-      (name) =>
-        `<a class="hover:text-ink hover:underline" href="/series/${slugify(name)}/">Series: ${esc(name)}</a>`,
-    )
+function seriesNav(post, allPosts) {
+  if (!post.series.length) return "";
+
+  const blocks = post.series
+    .map((name) => {
+      const entries = allPosts
+        .filter((item) => item.series.includes(name))
+        .sort((a, b) => a.date - b.date);
+      const position = entries.findIndex((item) => item.slug === post.slug) + 1;
+      const items = entries
+        .map((entry, index) => {
+          const current = entry.slug === post.slug;
+          return `<li><a class="series-item${current ? " is-current" : ""}" href="${entry.url}"${current ? ' aria-current="page"' : ""}><span class="series-item-number">${String(index + 1).padStart(2, "0")}</span><span class="min-w-0"><span class="series-item-title">${esc(entry.title)}</span><span class="series-item-meta">${formatDateShort(entry.date)}${current ? " · You are here" : ""}</span></span></a></li>`;
+        })
+        .join("");
+
+      return `<details class="series-nav group">
+        <summary class="series-summary">
+          <span class="font-mono text-[10px] uppercase tracking-widest opacity-60">Series</span>
+          <span class="font-black uppercase tracking-tight">${esc(name)}</span>
+          <span class="tag bg-purple">Part ${position} of ${entries.length}</span>
+          <span class="series-chevron ml-auto" aria-hidden="true">▾</span>
+        </summary>
+        <ol class="series-list">${items}</ol>
+      </details>`;
+    })
     .join("");
+
+  return `<div class="mt-5 max-w-2xl space-y-3">${blocks}</div>`;
 }
 
 function socialChips() {
@@ -1169,9 +1191,10 @@ function postPage(post, allPosts) {
   <header class="border-b-4 border-ink ${accent}">
     <div class="mx-auto max-w-6xl px-4 py-8 sm:py-12">
       <nav aria-label="Breadcrumb" class="font-mono text-[11px] uppercase tracking-widest"><a class="underline decoration-2 underline-offset-2 hover:bg-ink hover:text-paper" href="/">Home</a> <span aria-hidden="true">/</span> <a class="underline decoration-2 underline-offset-2 hover:bg-ink hover:text-paper" href="/posts/">Posts</a>${post.categories.length ? ` <span aria-hidden="true">/</span> <a class="underline decoration-2 underline-offset-2 hover:bg-ink hover:text-paper" href="/categories/${slugify(post.categories[0])}/">${esc(post.categories[0])}</a>` : ""}</nav>
+      ${seriesNav(post, allPosts)}
       <h1 class="mt-5 max-w-4xl break-words text-4xl font-black uppercase leading-[0.95] tracking-tight sm:text-5xl lg:text-6xl">${esc(post.title)}</h1>
       <p class="mt-4 max-w-3xl text-lg font-bold leading-snug">${esc(post.summary)}</p>
-      <div class="${metaTone} mt-6 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] uppercase tracking-widest"><time datetime="${isoDate(post.date)}">${formatDate(post.date)}</time><span aria-hidden="true">·</span><span>${post.readingTime} min read</span>${post.series.length ? `<span aria-hidden="true">·</span>${seriesLink(post)}` : ""}</div>
+      <div class="${metaTone} mt-6 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] uppercase tracking-widest"><time datetime="${isoDate(post.date)}">${formatDate(post.date)}</time><span aria-hidden="true">·</span><span>${post.readingTime} min read</span></div>
     </div>
   </header>
   <div class="mx-auto max-w-6xl px-4 py-10">
