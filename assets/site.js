@@ -1,6 +1,7 @@
 /*
- * Small progressive enhancements for the site: post search and, later,
- * the back-to-top control. Every feature must degrade gracefully without JS.
+ * Small progressive enhancements for the site: post search, the mobile
+ * navigation toggle, and the back-to-top control. Every feature must
+ * degrade gracefully without JS.
  */
 (() => {
   "use strict";
