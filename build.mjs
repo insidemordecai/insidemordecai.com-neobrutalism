@@ -19,6 +19,12 @@ const STATIC_DIR = path.join(ROOT, "static");
 
 const PAGE_SIZE = 20;
 const POSTS_PER_HOME = 6;
+/*
+ * The home category grid holds eight tiles. Below that, every category is
+ * already visible, so no "all categories" control is rendered. When the list
+ * grows past the grid, the last visible slot becomes an "all categories" tile.
+ */
+const HOME_CATEGORY_TILES = 8;
 
 const SITE = {
   url: (process.env.SITE_URL || "https://insidemordecai.com").replace(/\/$/, ""),
@@ -771,6 +777,14 @@ function addExternalRel(html) {
 /* Shared template fragments                                                  */
 /* -------------------------------------------------------------------------- */
 
+function categoryAccent(name) {
+  const key = String(name).toLowerCase();
+  return (
+    CATEGORY_ACCENTS[key] ||
+    ACCENTS[hashString(String(name)) % ACCENTS.length]
+  );
+}
+
 function accentFor(post) {
   const category = (post.categories[0] || "").toLowerCase();
   return (
@@ -833,7 +847,13 @@ function replyCta(title) {
 }
 
 function postCard(post) {
-  return `<article class="card flex h-full flex-col p-5"><div class="flex flex-wrap items-center justify-between gap-2 font-mono text-[11px] uppercase tracking-widest text-ink/60"><time datetime="${isoDate(post.date)}">${formatDateShort(post.date)}</time>${post.categories.length ? `<span class="hover:text-ink">${mutedCategoryLinks(post)}</span>` : ""}</div><h3 class="mt-4 text-xl font-black leading-tight tracking-tight"><a class="decoration-3 decoration-teal underline-offset-4 hover:underline" href="${post.url}">${esc(post.title)}</a></h3><p class="mt-2 text-sm leading-relaxed text-ink/75">${esc(post.summary)}</p><div class="mt-auto flex items-center justify-between gap-3 border-t-2 border-dashed border-ink/20 pt-3"><span class="font-mono text-[11px] uppercase tracking-wide text-ink/60">${post.readingTime} min read</span><a class="font-mono text-[11px] font-bold uppercase tracking-widest underline decoration-2 underline-offset-4 hover:bg-acid" href="${post.url}" aria-label="Read ${esc(post.title)}">Read →</a></div></article>`;
+  const badges = post.categories
+    .map(
+      (category) =>
+        `<a class="tag ${categoryAccent(category)} hover:-translate-y-0.5" href="/categories/${slugify(category)}/">${esc(category)}</a>`,
+    )
+    .join("");
+  return `<article class="card flex h-full flex-col p-5"><div class="flex flex-wrap items-center justify-between gap-2"><span class="flex flex-wrap gap-1.5">${badges}</span><time class="font-mono text-[11px] uppercase tracking-widest text-ink/60" datetime="${isoDate(post.date)}">${formatDateShort(post.date)}</time></div><h3 class="mt-4 text-xl font-black leading-tight tracking-tight"><a class="decoration-3 decoration-teal underline-offset-4 hover:underline" href="${post.url}">${esc(post.title)}</a></h3><p class="mt-2 text-sm leading-relaxed text-ink/75">${esc(post.summary)}</p><div class="mt-auto flex items-center justify-between gap-3 border-t-2 border-dashed border-ink/20 pt-3"><span class="font-mono text-[11px] uppercase tracking-wide text-ink/60">${post.readingTime} min read</span><a class="font-mono text-[11px] font-bold uppercase tracking-widest underline decoration-2 underline-offset-4 hover:bg-acid" href="${post.url}" aria-label="Read ${esc(post.title)}">Read →</a></div></article>`;
 }
 
 function postRow(post) {
@@ -975,12 +995,21 @@ function homePage(posts, categories) {
   const recent = posts.slice(0, POSTS_PER_HOME);
   const latest = posts[0]?.date || new Date();
 
-  const categoryCards = categories
+  const categoryOverflows = categories.length > HOME_CATEGORY_TILES;
+  const visibleCategories = categoryOverflows
+    ? categories.slice(0, HOME_CATEGORY_TILES - 1)
+    : categories;
+
+  const categoryCards = visibleCategories
     .map(
-      (category, index) =>
-        `<a class="group border-[3px] border-ink bg-paper p-4 shadow-brutal-sm transition-all hover:-translate-y-0.5 hover:shadow-brutal" href="/categories/${category.slug}/"><span class="block h-1.5 w-10 ${ACCENTS[index % ACCENTS.length]}"></span><div class="mt-4 flex items-baseline justify-between gap-3"><p class="text-lg font-black uppercase tracking-tight">${esc(category.name)}</p><span class="font-mono text-[11px] text-ink/60">${category.posts.length}</span></div></a>`,
+      (category) =>
+        `<a class="group border-[3px] border-ink bg-paper p-4 shadow-brutal-sm transition-all hover:-translate-y-0.5 hover:shadow-brutal" href="/categories/${category.slug}/"><span class="block h-1.5 w-10 ${categoryAccent(category.name)}"></span><div class="mt-4 flex items-baseline justify-between gap-3"><p class="text-lg font-black uppercase tracking-tight">${esc(category.name)}</p><span class="font-mono text-[11px] text-ink/60">${category.posts.length}</span></div></a>`,
     )
     .join("");
+
+  const allCategoriesTile = categoryOverflows
+    ? `<a class="group flex flex-col justify-between border-[3px] border-ink bg-ink p-4 text-paper shadow-brutal-sm transition-all hover:-translate-y-0.5 hover:shadow-brutal" href="/categories/"><span class="block h-1.5 w-10 bg-acid"></span><div class="mt-4 flex items-baseline justify-between gap-3"><p class="text-lg font-black uppercase tracking-tight">All ${categories.length} categories</p><span aria-hidden="true" class="font-black">→</span></div></a>`
+    : "";
 
   const content = `
   <section class="relative overflow-hidden border-b-4 border-ink">
@@ -1027,9 +1056,8 @@ function homePage(posts, categories) {
           <p class="font-mono text-xs uppercase tracking-widest text-ink/60">Pick a rabbit hole</p>
           <h2 class="text-3xl font-black uppercase tracking-tight sm:text-4xl">Browse by category</h2>
         </div>
-        <a class="btn w-full justify-center bg-paper sm:w-auto" href="/categories/">All categories →</a>
       </div>
-      <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">${categoryCards}</div>
+      <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">${categoryCards}${allCategoriesTile}</div>
     </div>
   </section>
   <section class="mx-auto max-w-6xl px-4 py-12 sm:py-16">
