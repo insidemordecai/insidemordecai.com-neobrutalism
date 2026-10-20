@@ -23,6 +23,36 @@
     window.addEventListener("scroll", updateBackToTop, { passive: true });
   }
 
+  const navToggle = document.querySelector(".nav-toggle");
+  const siteNav = document.getElementById("site-nav");
+  if (navToggle && siteNav) {
+    const setNavOpen = (open) => {
+      siteNav.classList.toggle("is-open", open);
+      navToggle.setAttribute("aria-expanded", String(open));
+      navToggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+    };
+
+    navToggle.addEventListener("click", () => {
+      setNavOpen(navToggle.getAttribute("aria-expanded") !== "true");
+    });
+
+    siteNav.addEventListener("click", (event) => {
+      if (event.target.closest("a")) setNavOpen(false);
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && siteNav.classList.contains("is-open")) {
+        setNavOpen(false);
+        navToggle.focus();
+      }
+    });
+
+    const desktop = window.matchMedia("(min-width: 640px)");
+    desktop.addEventListener("change", (event) => {
+      if (event.matches) setNavOpen(false);
+    });
+  }
+
   const dialog = document.getElementById("search-dialog");
   if (!dialog) return;
 

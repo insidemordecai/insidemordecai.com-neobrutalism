@@ -947,6 +947,7 @@ function layout({
   <meta name="theme-color" content="#0a1114" media="(prefers-color-scheme: dark)">
   <link rel="canonical" href="${esc(canonical)}">
   <link rel="stylesheet" href="/assets/style.css">
+  <noscript><style>@media (max-width:639px){.site-nav{display:flex!important;order:3;flex-basis:100%;flex-direction:column;align-items:stretch;gap:0;margin-top:.5rem;border-top:3px solid var(--color-ink);padding-top:.5rem}.site-nav .nav-link{display:block;border-width:0 0 2px;border-style:dashed;border-color:color-mix(in srgb,var(--color-ink) 25%,transparent);padding:.7rem .75rem}.site-nav .nav-link:last-child{border-bottom:0}.nav-toggle{display:none!important}.logo-name{display:block!important}.logo-mark{display:none!important}}</style></noscript>
   <link rel="alternate" type="application/rss+xml" title="${esc(SITE.title)}" href="${SITE.url}/index.xml">
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -971,11 +972,18 @@ function layout({
 <body id="top" class="flex min-h-screen flex-col bg-canvas font-sans text-ink antialiased">
   <a class="skip-link" href="#main">Skip to content</a>
   <header class="sticky top-0 z-50 border-b-4 border-ink bg-paper">
-    <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-3">
-      <a class="group flex items-center" href="/" aria-label="${esc(SITE.title)} — home">
-        <span class="logo-mark grid h-10 w-10 place-items-center border-[3px] border-ink bg-teal font-black shadow-brutal-sm transition-transform group-hover:-rotate-3">MK</span>
+    <div class="nav-shell mx-auto max-w-6xl px-4 py-3">
+      <a class="group flex min-w-0 items-center" href="/" aria-label="${esc(SITE.title)} — home">
+        <span class="logo-mark h-10 w-10 place-items-center border-[3px] border-ink bg-teal font-black shadow-brutal-sm transition-transform group-hover:-rotate-3">MK</span>
+        <span class="logo-name truncate text-[13px] font-black uppercase tracking-tight">${esc(SITE.title)}</span>
       </a>
-      <nav aria-label="Main" class="flex flex-wrap items-center gap-1 text-xs font-bold sm:text-sm">${navHtml}${searchTrigger}</nav>
+      <nav id="site-nav" aria-label="Main" class="site-nav text-xs font-bold sm:text-sm">${navHtml}</nav>
+      <div class="nav-controls">
+        ${searchTrigger}
+        <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu">
+          <span class="nav-toggle-bars" aria-hidden="true"><span class="nav-toggle-bar"></span><span class="nav-toggle-bar"></span><span class="nav-toggle-bar"></span></span>
+        </button>
+      </div>
     </div>
   </header>
   <main id="main" class="flex-1">${content}</main>

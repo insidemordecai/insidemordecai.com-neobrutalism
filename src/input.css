@@ -140,6 +140,137 @@
   }
 }
 
+.nav-shell {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.nav-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: auto;
+}
+
+.site-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.logo-mark {
+  display: none;
+}
+
+.logo-name {
+  display: block;
+}
+
+.nav-toggle {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 2px solid var(--color-ink);
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  box-shadow: 2px 2px 0 var(--shadow-color);
+}
+
+.nav-toggle:hover {
+  background-color: var(--color-acid);
+  color: var(--color-on-accent);
+}
+
+.nav-toggle:focus-visible {
+  outline: 3px solid var(--color-ink);
+  outline-offset: 2px;
+}
+
+.nav-toggle-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 18px;
+}
+
+.nav-toggle-bar {
+  display: block;
+  height: 2px;
+  background-color: currentColor;
+  transition:
+    transform 150ms ease,
+    opacity 150ms ease;
+}
+
+.nav-toggle[aria-expanded="true"] .nav-toggle-bar:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+
+.nav-toggle[aria-expanded="true"] .nav-toggle-bar:nth-child(2) {
+  opacity: 0;
+}
+
+.nav-toggle[aria-expanded="true"] .nav-toggle-bar:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+@media (min-width: 640px) {
+  .logo-mark {
+    display: grid;
+  }
+
+  .logo-name,
+  .nav-toggle {
+    display: none;
+  }
+
+  .site-nav {
+    flex-wrap: nowrap;
+  }
+}
+
+@media (max-width: 639px) {
+  .site-nav {
+    display: none;
+    order: 3;
+    flex-basis: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    margin-top: 0.5rem;
+    border-top: 3px solid var(--color-ink);
+    padding-top: 0.5rem;
+  }
+
+  .site-nav.is-open {
+    display: flex;
+  }
+
+  .site-nav .nav-link {
+    display: block;
+    border-width: 0 0 2px;
+    border-style: dashed;
+    border-color: color-mix(in srgb, var(--color-ink) 25%, transparent);
+    padding: 0.7rem 0.75rem;
+  }
+
+  .site-nav .nav-link[aria-current="page"] {
+    border-style: solid;
+    border-color: var(--color-ink);
+  }
+
+  .site-nav .nav-link:last-child {
+    border-bottom: 0;
+  }
+}
+
 .site-footer {
   background-color: var(--footer-bg);
   color: var(--footer-fg);
