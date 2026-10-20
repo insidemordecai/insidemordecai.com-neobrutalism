@@ -57,7 +57,7 @@ dist/                 generated output (git-ignored)
 
 ### Search and series navigation
 
-The navbar search opens a native `<dialog>` with `⌘ K` on macOS or `Ctrl K` on Windows/Linux. It fetches `/search-index.json` on intent (hover, focus, or open), scores titles, tags, categories, summaries, and post text locally, and supports arrow keys plus Enter. Without JavaScript, the search trigger is an ordinary link to `/posts/`.
+The navbar search opens a native `<dialog>` with `Cmd K` on macOS or `Ctrl K` on Windows/Linux. It fetches `/search-index.json` on intent (hover, focus, or open), scores titles, tags, categories, summaries, and post text locally, and supports arrow keys plus Enter. Without JavaScript, the search trigger is an ordinary link to `/posts/`.
 
 Posts that belong to a series show a `<details>` dropdown above the title with the series name, the current position (oldest post first), and links to every part. No JavaScript is required for the dropdown.
 

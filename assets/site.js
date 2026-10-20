@@ -10,8 +10,10 @@
     navigator.platform || navigator.userAgent,
   );
 
-  document.querySelectorAll("[data-kbd]").forEach((node) => {
-    node.textContent = isMac ? "⌘ K" : "Ctrl K";
+  const keyModifier = isMac ? "Cmd" : "Ctrl";
+
+  document.querySelectorAll("[data-kbd-mod]").forEach((node) => {
+    node.textContent = keyModifier;
   });
 
   const backToTop = document.getElementById("back-to-top");

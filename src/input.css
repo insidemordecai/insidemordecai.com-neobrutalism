@@ -886,22 +886,31 @@
   height: 14px;
 }
 
+.search-keys {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
 .search-kbd {
   flex: none;
-  min-width: 2.4rem;
+  min-width: 2.3rem;
   border: 2px solid currentColor;
-  padding: 0.1rem 0.35rem;
+  padding: 0.1rem 0.3rem;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 900;
   line-height: 1.4;
   text-align: center;
   white-space: nowrap;
 }
 
+.search-kbd-key {
+  min-width: 1.7rem;
+}
+
 @media (max-width: 639px) {
-  .search-trigger-label,
-  .search-kbd {
+  .search-keys {
     display: none;
   }
 
