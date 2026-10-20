@@ -29,7 +29,7 @@ const HOME_CATEGORY_TILES = 8;
 const SITE = {
   url: (process.env.SITE_URL || "https://insidemordecai.com").replace(/\/$/, ""),
   title: "Mordecai Kipng’etich",
-  tagline: "welcome to my corner of the internet about everything",
+  tagline: "Welcome to my corner of the internet about everything.",
   description:
     "Personal website and blog about tech, media, books, music, homelabs, and life in Kenya.",
   email: "mk@insidemordecai.com",
@@ -1056,16 +1056,16 @@ function homePage(posts, categories) {
           <span class="tag bg-aqua">Blog</span>
           <span class="tag bg-paper">Since 2022</span>
         </div>
-        <h1 class="mt-6 break-words text-[2.65rem] font-black uppercase leading-[0.88] tracking-tighter sm:text-7xl">Hi, I’m<br><span class="mark px-1">Mordz</span>.</h1>
+        <h1 class="mt-6 break-words text-[2.65rem] font-black uppercase leading-[0.88] tracking-tighter sm:text-7xl">Hi <span aria-hidden="true">👋</span> I’m<br><span class="mark px-1">Mordz</span></h1>
         <p class="mt-5 max-w-xl text-xl font-bold leading-snug sm:text-2xl">${esc(SITE.tagline)}</p>
-        <p class="mt-3 max-w-xl text-base leading-relaxed text-ink/80">STEM instructor, freelance software developer, and CS graduate in Kenya. I write about tech, media, books, music, homelabs, and the occasional tangent.</p>
+        <p class="mt-3 max-w-xl text-base leading-relaxed text-ink/80">I’m a STEM instructor and freelance software developer based in Kenya. I write about tech, media, books, music, homelabs, and the occasional tangent.</p>
         <div class="mt-6 flex flex-wrap gap-2">${socialChips()}</div>
-        <div class="mt-6 flex flex-wrap gap-3">
+        <div class="mt-6 hidden flex-wrap gap-3 sm:flex">
           <a class="btn" href="/posts/">Read the blog →</a>
           <a class="btn bg-paper" href="/about/">About me</a>
         </div>
       </div>
-      <div class="relative mx-auto w-full max-w-[320px]">
+      <div class="relative mx-auto hidden w-full max-w-[320px] md:block">
         <div class="rotate-2 border-4 border-ink bg-aqua p-3 shadow-brutal">
           <img src="/assets/img/profile.webp" alt="${esc(SITE.title)}" width="1080" height="1080" class="aspect-square w-full border-[3px] border-ink object-cover" fetchpriority="high">
           <p class="mt-3 border-2 border-ink bg-paper px-2 py-1 text-center font-mono text-[10px] uppercase tracking-widest">${esc(SITE.location)}</p>
