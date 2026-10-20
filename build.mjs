@@ -1353,7 +1353,7 @@ function termPage(term, kind, latest) {
   const isCategory = kind === "categories";
   const isSeries = kind === "series";
   const accent = isCategory
-    ? "bg-teal"
+    ? categoryAccent(term.name)
     : isSeries
       ? "bg-aqua"
       : "bg-mist";
