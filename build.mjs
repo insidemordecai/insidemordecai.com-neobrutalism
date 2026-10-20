@@ -932,7 +932,7 @@ function layout({
     )
     .join("");
 
-  const searchTrigger = `<a class="search-trigger" href="/posts/" data-search-open aria-haspopup="dialog" aria-controls="search-dialog" aria-keyshortcuts="Meta+K Control+K"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 4.5 4.5"></path></svg><span class="search-trigger-label">Search</span><kbd class="search-kbd" data-kbd>⌘K</kbd></a>`;
+  const searchTrigger = `<a class="search-trigger" href="/posts/" data-search-open aria-label="Search posts" aria-haspopup="dialog" aria-controls="search-dialog" aria-keyshortcuts="Meta+K Control+K"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 4.5 4.5"></path></svg><span class="search-trigger-label">Search</span><kbd class="search-kbd" data-kbd>⌘K</kbd></a>`;
 
   return `<!doctype html>
 <html lang="en">

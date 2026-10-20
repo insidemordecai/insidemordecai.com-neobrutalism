@@ -186,7 +186,7 @@
 
       const summary = document.createElement("span");
       summary.className = "search-result-summary";
-      summary.textContent = post.summary;
+      summary.textContent = post.summary || "";
 
       link.append(top, title, summary);
       results.append(link);

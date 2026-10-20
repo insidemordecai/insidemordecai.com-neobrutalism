@@ -175,7 +175,7 @@
 }
 
 .on-accent-muted {
-  color: color-mix(in srgb, var(--color-on-accent) 65%, transparent);
+  color: color-mix(in srgb, var(--color-on-accent) 85%, transparent);
 }
 
 .on-accent-muted a {
