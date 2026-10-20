@@ -10,7 +10,7 @@
   );
 
   document.querySelectorAll("[data-kbd]").forEach((node) => {
-    node.textContent = isMac ? "⌘K" : "Ctrl K";
+    node.textContent = isMac ? "⌘ K" : "Ctrl K";
   });
 
   const backToTop = document.getElementById("back-to-top");

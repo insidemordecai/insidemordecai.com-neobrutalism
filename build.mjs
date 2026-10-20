@@ -932,7 +932,7 @@ function layout({
     )
     .join("");
 
-  const searchTrigger = `<a class="search-trigger" href="/posts/" data-search-open aria-label="Search posts" aria-haspopup="dialog" aria-controls="search-dialog" aria-keyshortcuts="Meta+K Control+K"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 4.5 4.5"></path></svg><span class="search-trigger-label">Search</span><kbd class="search-kbd" data-kbd>⌘K</kbd></a>`;
+  const searchTrigger = `<a class="search-trigger" href="/posts/" data-search-open aria-label="Search posts" aria-haspopup="dialog" aria-controls="search-dialog" aria-keyshortcuts="Meta+K Control+K"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 4.5 4.5"></path></svg><span class="search-trigger-label">Search</span><kbd class="search-kbd" data-kbd>⌘ K</kbd></a>`;
 
   return `<!doctype html>
 <html lang="en">
@@ -1017,7 +1017,7 @@ function layout({
         <input id="search-input" class="search-input" type="search" placeholder="Search posts…" autocomplete="off" spellcheck="false" aria-controls="search-results" aria-describedby="search-help">
         <button class="search-close" type="button" data-search-close aria-label="Close search">Esc</button>
       </div>
-      <p class="search-help" id="search-help">Titles, tags, categories, and full text. Use <kbd data-kbd>⌘K</kbd> to open, ↑↓ to move, Enter to read.</p>
+      <p class="search-help" id="search-help">Titles, tags, categories, and full text. Use <kbd data-kbd>⌘ K</kbd> to open, ↑↓ to move, Enter to read.</p>
       <div class="search-results" id="search-results" role="list" aria-label="Search results"></div>
       <p class="search-status" id="search-status" role="status" aria-live="polite"></p>
     </div>

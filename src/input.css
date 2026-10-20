@@ -724,6 +724,7 @@
 
 .search-trigger {
   display: inline-flex;
+  flex: none;
   align-items: center;
   gap: 0.35rem;
   border: 2px solid var(--color-ink);
@@ -750,12 +751,16 @@
 }
 
 .search-kbd {
+  flex: none;
+  min-width: 2.4rem;
   border: 2px solid currentColor;
-  padding: 0 0.25rem;
+  padding: 0.1rem 0.35rem;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 900;
   line-height: 1.4;
+  text-align: center;
+  white-space: nowrap;
 }
 
 @media (max-width: 639px) {
