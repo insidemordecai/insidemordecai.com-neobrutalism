@@ -1001,10 +1001,6 @@ function layout({
           </ul>
         </nav>
       </div>
-      <div class="mt-8 flex flex-col gap-3 border-t-2 border-dashed border-paper/25 pt-5 font-mono text-[11px] uppercase tracking-widest sm:flex-row sm:items-center sm:justify-between">
-        <p>© ${new Date().getFullYear()} ${esc(SITE.title)} · <a class="underline decoration-2 underline-offset-2 hover:text-acid" href="${SITE.licenseUrl}">${esc(SITE.license)}</a></p>
-        <p>No trackers. No ads. No third-party requests.</p>
-      </div>
     </div>
   </footer>
   <a class="back-to-top" id="back-to-top" href="#top" aria-label="Back to top"><span aria-hidden="true">↑</span><span class="back-to-top-label">Top</span></a>
