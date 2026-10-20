@@ -144,7 +144,6 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
   gap: 0.5rem;
 }
 
@@ -152,7 +151,7 @@
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  margin-left: auto;
+  margin-left: 0;
 }
 
 .site-nav {
@@ -160,6 +159,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.25rem;
+  margin-left: auto;
 }
 
 .logo-mark {
@@ -237,6 +237,10 @@
 }
 
 @media (max-width: 639px) {
+  .nav-controls {
+    margin-left: auto;
+  }
+
   .site-nav {
     display: none;
     order: 3;
@@ -245,6 +249,7 @@
     align-items: stretch;
     gap: 0;
     margin-top: 0.5rem;
+    margin-left: 0;
     border-top: 3px solid var(--color-ink);
     padding-top: 0.5rem;
   }
