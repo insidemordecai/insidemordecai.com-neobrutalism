@@ -97,24 +97,25 @@ const MONTHS_SHORT = [
 ];
 
 const ACCENTS = [
-  "bg-mist",
+  "bg-purple",
   "bg-aqua",
   "bg-blush",
   "bg-lime",
   "bg-acid",
   "bg-coral",
+  "bg-mist",
 ];
 
 const CATEGORY_ACCENTS = {
-  technical: "bg-aqua",
-  opinion: "bg-blush",
+  technical: "bg-purple",
+  opinion: "bg-coral",
   updates: "bg-lime",
-  web: "bg-mist",
+  web: "bg-aqua",
 };
 
 const PAGE_ACCENTS = {
   about: "bg-mist",
-  links: "bg-aqua",
+  links: "bg-purple",
   subscribe: "bg-lime",
   colophon: "bg-paper",
   contact: "bg-blush",
@@ -906,7 +907,7 @@ function layout({
   <meta name="author" content="${esc(SITE.title)}">
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#009bad" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#0c1517" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#0a1114" media="(prefers-color-scheme: dark)">
   <link rel="canonical" href="${esc(canonical)}">
   <link rel="stylesheet" href="/assets/style.css">
   <link rel="alternate" type="application/rss+xml" title="${esc(SITE.title)}" href="${SITE.url}/index.xml">
@@ -930,12 +931,12 @@ function layout({
   ${published && ogType === "article" ? `<meta property="article:published_time" content="${esc(published)}">` : ""}
   ${noIndex ? '<meta name="robots" content="noindex">' : ""}
 </head>
-<body class="flex min-h-screen flex-col bg-paper font-sans text-ink antialiased">
+<body class="flex min-h-screen flex-col bg-canvas font-sans text-ink antialiased">
   <a class="skip-link" href="#main">Skip to content</a>
   <header class="sticky top-0 z-50 border-b-4 border-ink bg-paper">
     <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-3">
       <a class="group flex items-center gap-3" href="/" aria-label="Home">
-        <span class="logo-mark grid h-10 w-10 place-items-center border-[3px] border-ink bg-teal font-black text-ink shadow-brutal-sm transition-transform group-hover:-rotate-3">MK</span>
+        <span class="logo-mark grid h-10 w-10 place-items-center border-[3px] border-ink bg-teal font-black shadow-brutal-sm transition-transform group-hover:-rotate-3">MK</span>
         <span class="hidden text-sm font-black uppercase tracking-tight sm:block">${esc(SITE.title)}</span>
       </a>
       <nav aria-label="Main" class="flex flex-wrap items-center gap-1 text-xs font-bold sm:text-sm">${navHtml}</nav>
@@ -945,7 +946,7 @@ function layout({
   <footer class="site-footer border-t-4 border-ink">
     <div class="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-10 sm:flex-row sm:items-start sm:justify-between">
       <div class="flex flex-col gap-4">
-        <a class="w-fit" href="/" aria-label="Home"><span class="grid h-10 w-10 place-items-center border-[3px] border-paper bg-acid font-black text-ink">MK</span></a>
+        <a class="w-fit" href="/" aria-label="Home"><span class="grid h-10 w-10 place-items-center border-[3px] border-paper bg-acid font-black">MK</span></a>
         <div class="flex flex-wrap gap-2">${footerSocials()}</div>
       </div>
       <nav aria-label="Footer">
@@ -1109,6 +1110,7 @@ function postPage(post, allPosts) {
   const newer = index > 0 ? allPosts[index - 1] : null;
   const older = index >= 0 && index < allPosts.length - 1 ? allPosts[index + 1] : null;
   const accent = accentFor(post);
+  const metaTone = accent === "bg-mist" ? "text-ink/60" : "on-accent-muted";
   const toc = tocBox(post.toc);
   const hasToc = post.toc.length >= 2;
 
@@ -1137,10 +1139,10 @@ function postPage(post, allPosts) {
   const content = `
   <header class="border-b-4 border-ink ${accent}">
     <div class="mx-auto max-w-6xl px-4 py-8 sm:py-12">
-      <nav aria-label="Breadcrumb" class="font-mono text-[11px] uppercase tracking-widest"><a class="underline decoration-2 underline-offset-2 hover:bg-paper" href="/">Home</a> <span aria-hidden="true">/</span> <a class="underline decoration-2 underline-offset-2 hover:bg-paper" href="/posts/">Posts</a>${post.categories.length ? ` <span aria-hidden="true">/</span> <a class="underline decoration-2 underline-offset-2 hover:bg-paper" href="/categories/${slugify(post.categories[0])}/">${esc(post.categories[0])}</a>` : ""}</nav>
+      <nav aria-label="Breadcrumb" class="font-mono text-[11px] uppercase tracking-widest"><a class="underline decoration-2 underline-offset-2 hover:bg-ink hover:text-paper" href="/">Home</a> <span aria-hidden="true">/</span> <a class="underline decoration-2 underline-offset-2 hover:bg-ink hover:text-paper" href="/posts/">Posts</a>${post.categories.length ? ` <span aria-hidden="true">/</span> <a class="underline decoration-2 underline-offset-2 hover:bg-ink hover:text-paper" href="/categories/${slugify(post.categories[0])}/">${esc(post.categories[0])}</a>` : ""}</nav>
       <h1 class="mt-5 max-w-4xl break-words text-4xl font-black uppercase leading-[0.95] tracking-tight sm:text-5xl lg:text-6xl">${esc(post.title)}</h1>
       <p class="mt-4 max-w-3xl text-lg font-bold leading-snug">${esc(post.summary)}</p>
-      <div class="mt-6 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] uppercase tracking-widest text-ink/60"><time datetime="${isoDate(post.date)}">${formatDate(post.date)}</time><span aria-hidden="true">·</span><span>${post.readingTime} min read</span>${post.series.length ? `<span aria-hidden="true">·</span>${seriesLink(post)}` : ""}</div>
+      <div class="${metaTone} mt-6 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] uppercase tracking-widest"><time datetime="${isoDate(post.date)}">${formatDate(post.date)}</time><span aria-hidden="true">·</span><span>${post.readingTime} min read</span>${post.series.length ? `<span aria-hidden="true">·</span>${seriesLink(post)}` : ""}</div>
     </div>
   </header>
   <div class="mx-auto max-w-6xl px-4 py-10">
@@ -1260,7 +1262,7 @@ function tagsIndex(tags, latest) {
   const chips = tags
     .map(
       (tag) =>
-        `<a class="group inline-flex items-center gap-2 border-2 border-ink bg-paper px-3 py-1.5 font-mono text-xs transition-colors hover:bg-acid" href="/tags/${tag.slug}/"><span>#${esc(tag.name)}</span><span class="text-ink/50 group-hover:text-ink">${tag.posts.length}</span></a>`,
+        `<a class="group inline-flex items-center gap-2 border-2 border-ink bg-paper px-3 py-1.5 font-mono text-xs transition-colors hover:bg-acid" href="/tags/${tag.slug}/"><span>#${esc(tag.name)}</span><span class="text-ink/50 group-hover:text-[#101314]">${tag.posts.length}</span></a>`,
     )
     .join("");
 
@@ -1334,7 +1336,7 @@ function termPage(term, kind, latest) {
   const content = `
   <header class="border-b-4 border-ink ${accent}">
     <div class="mx-auto max-w-4xl px-4 py-10 sm:py-14">
-      <nav aria-label="Breadcrumb" class="font-mono text-[11px] uppercase tracking-widest"><a class="underline decoration-2 underline-offset-2 hover:bg-paper" href="/">Home</a> <span aria-hidden="true">/</span> <a class="underline decoration-2 underline-offset-2 hover:bg-paper" href="/${kind}/">${plural}</a></nav>
+      <nav aria-label="Breadcrumb" class="font-mono text-[11px] uppercase tracking-widest"><a class="underline decoration-2 underline-offset-2 hover:bg-ink hover:text-paper" href="/">Home</a> <span aria-hidden="true">/</span> <a class="underline decoration-2 underline-offset-2 hover:bg-ink hover:text-paper" href="/${kind}/">${plural}</a></nav>
       <p class="tag mt-5 bg-paper">${label}</p>
       <h1 class="mt-4 break-words text-4xl font-black uppercase tracking-tight sm:text-6xl">${heading}</h1>
       <p class="mt-3 font-bold">${term.posts.length} post${term.posts.length === 1 ? "" : "s"} filed under this ${label.toLowerCase()}.</p>

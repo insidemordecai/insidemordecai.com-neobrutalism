@@ -2,16 +2,19 @@
 @source "../dist";
 
 @theme {
-  --color-paper: #fbfaf4;
+  --color-canvas: #f4f0e6;
+  --color-paper: #fffdf7;
   --color-ink: #101314;
   --color-teal: #009bad;
   --color-deep: #0a4f56;
   --color-mist: #d8f1f1;
-  --color-aqua: #83e3e8;
+  --color-aqua: #7ce7ec;
   --color-acid: #ffd447;
-  --color-coral: #ff7f5f;
+  --color-coral: #ff8a6b;
   --color-lime: #c9f27a;
   --color-blush: #ffd9c9;
+  --color-purple: #b79cff;
+  --color-on-accent: #101314;
 
   --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -36,7 +39,7 @@
   }
 
   body {
-    background-color: var(--color-paper);
+    background-color: var(--color-canvas);
     background-image:
       linear-gradient(
         to right,
@@ -95,6 +98,7 @@
 
   .btn {
     @apply inline-flex items-center justify-center gap-2 border-[3px] border-ink bg-acid px-4 py-2.5 text-sm font-black uppercase tracking-tight shadow-brutal transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-brutal-lg active:translate-x-0.5 active:translate-y-0.5 active:shadow-brutal-sm;
+    color: var(--color-on-accent);
   }
 
   .card {
@@ -103,6 +107,7 @@
 
   .tag {
     @apply inline-flex items-center border-2 border-ink px-2 py-0.5 text-[10px] font-black uppercase leading-tight tracking-wider;
+    color: var(--color-on-accent);
   }
 
   .chip {
@@ -114,12 +119,16 @@
   }
 
   .toc-link {
-    @apply block border-l-2 border-transparent py-0.5 pl-2 leading-snug text-ink/75 transition-colors hover:border-ink hover:bg-acid hover:text-ink;
+    @apply block border-l-2 border-transparent py-0.5 pl-2 leading-snug text-ink/75 transition-colors hover:border-ink hover:bg-acid;
+  }
+
+  .toc-link:hover {
+    color: var(--color-on-accent);
   }
 
   .mark {
     background-color: var(--color-acid);
-    color: var(--color-ink);
+    color: var(--color-on-accent);
     box-decoration-break: clone;
   }
 }
@@ -138,8 +147,45 @@
 
 .site-footer nav a:hover {
   background-color: var(--color-acid);
-  color: var(--color-ink);
+  color: var(--color-on-accent);
   text-decoration-color: transparent;
+}
+
+/*
+ * Accent surfaces always carry the same near-black ink, in both schemes.
+ * Card/paper surfaces follow the active text colour instead.
+ */
+.bg-acid,
+.bg-teal,
+.bg-aqua,
+.bg-blush,
+.bg-lime,
+.bg-coral,
+.bg-purple,
+.bg-mist {
+  color: var(--color-on-accent);
+}
+
+.bg-paper {
+  color: var(--color-ink);
+}
+
+.bg-ink {
+  color: var(--color-paper);
+}
+
+.on-accent-muted {
+  color: color-mix(in srgb, var(--color-on-accent) 65%, transparent);
+}
+
+.on-accent-muted a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.on-accent-muted a:hover {
+  color: var(--color-on-accent);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -210,6 +256,7 @@
 
 .prose-neo a:hover {
   background-color: var(--color-acid);
+  color: var(--color-on-accent);
   text-decoration-color: transparent;
 }
 
@@ -459,7 +506,7 @@
   border: 2px solid var(--color-ink);
   background-color: var(--alert-rule);
   padding: 0.15rem 0.45rem;
-  color: var(--color-ink);
+  color: var(--color-on-accent);
   font-family: var(--font-mono);
   font-size: 0.65rem;
   font-weight: 900;
@@ -582,19 +629,30 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-paper: #0c1517;
-    --color-ink: #f1eee5;
-    --color-teal: #0d6f79;
-    --color-deep: #072f33;
-    --color-mist: #12383c;
-    --color-aqua: #175960;
-    --color-acid: #7d630f;
-    --color-coral: #8f452f;
-    --color-lime: #4c5b1c;
-    --color-blush: #573228;
+    --color-canvas: #0a1114;
+    --color-paper: #141d20;
+    --color-ink: #f3efe4;
+    --color-teal: #23b8c2;
+    --color-deep: #062f34;
+    --color-mist: #16383c;
+    --color-aqua: #62dde3;
+    --color-acid: #ffd447;
+    --color-coral: #ff8f70;
+    --color-lime: #c9f27a;
+    --color-blush: #ffd9c9;
+    --color-purple: #c3a6ff;
     --shadow-color: #000000;
-    --footer-bg: #081012;
-    --footer-fg: #f1eee5;
+    --footer-bg: #080d0f;
+    --footer-fg: #f3efe4;
+  }
+
+  /* Mist is a dark surface in this scheme, unlike the other accents. */
+  .bg-mist {
+    color: var(--color-ink);
+  }
+
+  .hover\:bg-acid:hover {
+    color: var(--color-on-accent);
   }
 
   .site-footer nav a {
