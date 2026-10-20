@@ -814,13 +814,6 @@ function socialChips() {
   ).join("");
 }
 
-function footerSocials() {
-  return SOCIALS.map(
-    (social) =>
-      `<a class="border-2 border-paper/30 px-2 py-1 font-mono text-[10px] uppercase tracking-wide transition-colors hover:border-paper hover:text-paper" href="${social.href}" rel="me">${esc(social.label)}</a>`,
-  ).join("");
-}
-
 function tocBox(toc) {
   if (toc.length < 2) return "";
 
@@ -943,22 +936,31 @@ function layout({
   </header>
   <main id="main" class="flex-1">${content}</main>
   <footer class="site-footer border-t-4 border-ink">
-    <div class="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-10 sm:flex-row sm:items-start sm:justify-between">
-      <div class="flex flex-col gap-4">
-        <a class="w-fit" href="/" aria-label="Home"><span class="grid h-10 w-10 place-items-center border-[3px] border-paper bg-acid font-black">MK</span></a>
-        <div class="flex flex-wrap gap-2">${footerSocials()}</div>
+    <div class="mx-auto max-w-6xl px-4 py-10">
+      <div class="flex flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
+        <div class="max-w-sm">
+          <a class="inline-flex items-center gap-3" href="/" aria-label="${esc(SITE.title)} — home">
+            <span class="grid h-10 w-10 place-items-center border-[3px] border-ink bg-acid font-black">MK</span>
+            <span class="text-sm font-black uppercase tracking-tight">${esc(SITE.title)}</span>
+          </a>
+          <p class="mt-4 text-sm leading-relaxed opacity-80">${esc(SITE.description)}</p>
+        </div>
+        <nav aria-label="Footer">
+          <ul class="flex flex-wrap gap-x-6 gap-y-2 text-sm font-bold">
+            <li><a href="/categories/">Categories</a></li>
+            <li><a href="/tags/">Tags</a></li>
+            <li><a href="/series/">Series</a></li>
+            <li><a href="/contact/">Contact</a></li>
+            <li><a href="/support/">Support</a></li>
+            <li><a href="/colophon/">Colophon</a></li>
+            <li><a href="/index.xml">RSS</a></li>
+          </ul>
+        </nav>
       </div>
-      <nav aria-label="Footer">
-        <ul class="flex flex-wrap gap-x-6 gap-y-2 text-sm font-bold">
-          <li><a href="/categories/">Categories</a></li>
-          <li><a href="/tags/">Tags</a></li>
-          <li><a href="/series/">Series</a></li>
-          <li><a href="/contact/">Contact</a></li>
-          <li><a href="/support/">Support</a></li>
-          <li><a href="/colophon/">Colophon</a></li>
-          <li><a href="/index.xml">RSS</a></li>
-        </ul>
-      </nav>
+      <div class="mt-8 flex flex-col gap-3 border-t-2 border-dashed border-paper/25 pt-5 font-mono text-[11px] uppercase tracking-widest sm:flex-row sm:items-center sm:justify-between">
+        <p>© ${new Date().getFullYear()} ${esc(SITE.title)} · <a class="underline decoration-2 underline-offset-2 hover:text-acid" href="${SITE.licenseUrl}">${esc(SITE.license)}</a></p>
+        <p>No trackers. No ads. No third-party requests.</p>
+      </div>
     </div>
   </footer>
 </body>
