@@ -932,6 +932,8 @@ function layout({
     )
     .join("");
 
+  const searchTrigger = `<a class="search-trigger" href="/posts/" data-search-open aria-haspopup="dialog" aria-controls="search-dialog" aria-keyshortcuts="Meta+K Control+K"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 4.5 4.5"></path></svg><span class="search-trigger-label">Search</span><kbd class="search-kbd" data-kbd>⌘K</kbd></a>`;
+
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -973,7 +975,7 @@ function layout({
       <a class="group flex items-center" href="/" aria-label="${esc(SITE.title)} — home">
         <span class="logo-mark grid h-10 w-10 place-items-center border-[3px] border-ink bg-teal font-black shadow-brutal-sm transition-transform group-hover:-rotate-3">MK</span>
       </a>
-      <nav aria-label="Main" class="flex flex-wrap items-center gap-1 text-xs font-bold sm:text-sm">${navHtml}</nav>
+      <nav aria-label="Main" class="flex flex-wrap items-center gap-1 text-xs font-bold sm:text-sm">${navHtml}${searchTrigger}</nav>
     </div>
   </header>
   <main id="main" class="flex-1">${content}</main>
@@ -1005,6 +1007,21 @@ function layout({
       </div>
     </div>
   </footer>
+  <dialog id="search-dialog" class="search-dialog" aria-labelledby="search-dialog-title">
+    <div class="search-panel">
+      <h2 id="search-dialog-title" class="sr-only">Search posts</h2>
+      <div class="search-bar">
+        <svg class="search-bar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 4.5 4.5"></path></svg>
+        <label class="sr-only" for="search-input">Search posts</label>
+        <input id="search-input" class="search-input" type="search" placeholder="Search posts…" autocomplete="off" spellcheck="false" aria-controls="search-results" aria-describedby="search-help">
+        <button class="search-close" type="button" data-search-close aria-label="Close search">Esc</button>
+      </div>
+      <p class="search-help" id="search-help">Titles, tags, categories, and full text. Use <kbd data-kbd>⌘K</kbd> to open, ↑↓ to move, Enter to read.</p>
+      <div class="search-results" id="search-results" role="list" aria-label="Search results"></div>
+      <p class="search-status" id="search-status" role="status" aria-live="polite"></p>
+    </div>
+  </dialog>
+  <script src="/assets/site.js" defer></script>
 </body>
 </html>`;
 }
@@ -1668,6 +1685,30 @@ function collectTerms(posts) {
   };
 }
 
+function buildSearchIndex(posts) {
+  return posts.map((post) => ({
+    title: post.title,
+    url: post.url,
+    summary: post.summary,
+    categories: post.categories,
+    tags: post.tags,
+    series: post.series,
+    date: isoDate(post.date),
+    dateLabel: formatDateShort(post.date),
+    text: decodeEntities(
+      stripTags(
+        post.html.replace(
+          /<\/(p|h[1-6]|li|blockquote|pre|div|figcaption|td|th)>/gi,
+          " ",
+        ),
+      ),
+    )
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 8000),
+  }));
+}
+
 /* -------------------------------------------------------------------------- */
 /* File output                                                                */
 /* -------------------------------------------------------------------------- */
@@ -1771,6 +1812,9 @@ function build() {
       lastmod: isoDate(post.date),
     });
   }
+
+  // Client-side search data. Kept out of the sitemap and fetched on demand.
+  writeFile("search-index.json", JSON.stringify(buildSearchIndex(posts)));
 
   // Standalone pages. The Attic stays reachable by URL but out of the sitemap.
   for (const page of pages) {
