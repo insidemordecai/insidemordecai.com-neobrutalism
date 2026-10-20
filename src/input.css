@@ -56,7 +56,7 @@
 
   ::selection {
     background-color: var(--color-acid);
-    color: var(--color-ink);
+    color: var(--color-on-accent);
   }
 
   :focus-visible {
