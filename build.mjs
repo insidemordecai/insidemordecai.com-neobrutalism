@@ -1216,7 +1216,7 @@ function postPage(post, allPosts) {
   const content = `
   <header class="border-b-4 border-ink ${accent}">
     <div class="mx-auto max-w-6xl px-4 py-8 sm:py-12">
-      <nav aria-label="Breadcrumb" class="font-mono text-[11px] uppercase tracking-widest"><a class="underline decoration-2 underline-offset-2 hover:bg-ink hover:text-paper" href="/">Home</a> <span aria-hidden="true">/</span> <a class="underline decoration-2 underline-offset-2 hover:bg-ink hover:text-paper" href="/posts/">Posts</a>${post.categories.length ? ` <span aria-hidden="true">/</span> <a class="underline decoration-2 underline-offset-2 hover:bg-ink hover:text-paper" href="/categories/${slugify(post.categories[0])}/">${esc(post.categories[0])}</a>` : ""}</nav>
+      <nav aria-label="Breadcrumb" class="font-mono text-[11px] uppercase tracking-widest"><a class="underline decoration-2 underline-offset-2 hover:bg-ink hover:text-paper" href="/">Home</a> <span aria-hidden="true">/</span> <a class="underline decoration-2 underline-offset-2 hover:bg-ink hover:text-paper" href="/posts/">Posts</a></nav>
       ${seriesNav(post, allPosts)}
       <h1 class="mt-5 max-w-4xl break-words text-4xl font-black uppercase leading-[0.95] tracking-tight sm:text-5xl lg:text-6xl">${esc(post.title)}</h1>
       <p class="mt-4 max-w-3xl text-lg font-bold leading-snug">${esc(post.summary)}</p>
