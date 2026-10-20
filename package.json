@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "A static, neobrutalist clone of insidemordecai.com — HTML, Tailwind CSS, and no client-side JavaScript.",
+  "description": "A static, neobrutalist clone of insidemordecai.com — HTML, Tailwind CSS, and a small local script for search and navigation.",
   "scripts": {
     "generate": "node build.mjs",
     "css": "mkdir -p dist/assets && tailwindcss -i src/input.css -o dist/assets/style.css --minify",

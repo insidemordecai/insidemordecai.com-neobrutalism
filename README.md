@@ -1,8 +1,8 @@
 # insidemordecai.com — neobrutalist clone
 
-A static, neobrutalist rebuild of [insidemordecai.com](https://insidemordecai.com). It keeps all 54 posts, the standalone pages, categories, tags, series, pagination, RSS, and the old URL aliases — but drops Hugo, Blowfish, analytics, client-side JavaScript, and every third-party runtime request.
+A static, neobrutalist rebuild of [insidemordecai.com](https://insidemordecai.com). It keeps all 54 posts, the standalone pages, categories, tags, series, pagination, RSS, and the old URL aliases — but drops Hugo, Blowfish, analytics, and every third-party runtime request.
 
-The output is plain HTML, one locally compiled Tailwind stylesheet, and local images. There is no CDN, no web font, no tracking script, and no client-side framework.
+The output is plain HTML, one locally compiled Tailwind stylesheet, a small local script for search and navigation, and local images. There is no CDN, no web font, no tracking script, and no client-side framework.
 
 ## Quick start
 
@@ -31,6 +31,7 @@ content/              Markdown posts and pages (the source of truth)
   posts/              one folder per post, optional img/ inside
   about/ links/ ...   standalone pages
 assets/img/           profile and Open Graph image
+assets/site.js        local search and back-to-top enhancements
 static/               favicons, CNAME, manifest source
 src/input.css         Tailwind theme, components, article typography
 build.mjs             static site generator and page templates
@@ -50,8 +51,15 @@ dist/                 generated output (git-ignored)
 - standalone pages at `/<section>/`
 - `/categories/`, `/tags/`, `/series/`, and a page per term
 - `index.xml` (RSS), `sitemap.xml`, `robots.txt`, `site.webmanifest`
+- `search-index.json`, regenerated from every public post and fetched only when search is used
 - redirect pages for aliases such as `/hello`, `/privacy`, and `/blogroll`
 - a neobrutalist `404.html`
+
+### Search and series navigation
+
+The navbar search opens a native `<dialog>` with `Cmd+K` on macOS or `Ctrl+K` on Windows/Linux. It fetches `/search-index.json` on intent (hover, focus, or open), scores titles, tags, categories, summaries, and post text locally, and supports arrow keys plus Enter. Without JavaScript, the search trigger is an ordinary link to `/posts/`.
+
+Posts that belong to a series show a `<details>` dropdown above the title with the series name, the current position (oldest post first), and links to every part. No JavaScript is required for the dropdown.
 
 It also handles the Hugo shortcodes used by the original content:
 
@@ -102,13 +110,15 @@ Site-wide details — domain, title, email, social links, Open Graph image — l
 
 The visual language is deliberately simple and loud:
 
-- **Palette:** warm paper `#FBFAF4`, ink `#101314`, and a teal-led accent set built around the original brand colour `#009BAD` — pale mist `#D8F1F1`, aqua `#83E3E8`, acid yellow `#FFD447`, coral `#FF7F5F`, lime `#C9F27A`, blush `#FFD9C9`. Dark mode uses deeper versions of the same hues.
+- **Palette:** warm canvas `#F4F0E6`, paper cards `#FFFDF7`, ink `#101314`, and a teal-led accent set built around the original brand colour `#009BAD` — pale mist `#D8F1F1`, aqua `#7CE7EC`, acid yellow `#FFD447`, coral `#FF8A6B`, lime `#C9F27A`, blush `#FFD9C9`, and purple `#B79CFF`. Dark mode keeps a near-black canvas but uses the same bright accent surfaces with fixed dark ink, so purple, teal, coral, and lime stay vivid rather than turning muddy.
+- **Category colour codes:** Technical is purple, Opinion is coral, Updates is lime, and Web is aqua. The colours repeat in home cards, category badges, category headers, and post date blocks. Post lists keep categories muted so they do not compete with the titles.
 - **Shape:** 3–4 px hard borders, offset shadows, square corners, rotated stickers, visible focus outlines.
 - **Type:** system sans and system mono stacks. No web fonts are downloaded.
 - **Background:** a CSS grid instead of the original Unsplash image.
-- **Interaction:** CSS hover/active transforms only. No JavaScript, no theme toggle, no search box.
-- **Dark mode:** automatic, based on `prefers-color-scheme`. There is no toggle and no JavaScript involved.
-- **Accessibility:** skip link, semantic landmarks, one `h1` per page, alt text from Markdown, `aria-current` navigation, and reduced-motion support.
+- **Home layout:** the recent-post cards use prominent category tags, while the category grid shows every category until it would overflow eight tiles. Past that point, the last tile becomes “All N categories” instead of showing a redundant button.
+- **Interaction:** CSS hover/active transforms, a keyboard-accessible search dialog, and a floating back-to-top control. No theme toggle and no client-side framework.
+- **Dark mode:** automatic, based on `prefers-color-scheme`. There is no toggle; the small script only handles search and the back-to-top state.
+- **Accessibility:** skip link, semantic landmarks, one `h1` per page, alt text from Markdown, `aria-current` navigation, native `<dialog>` focus handling, keyboard shortcuts, and reduced-motion support.
 
 ## Testing the RSS feed
 
@@ -149,10 +159,12 @@ Feed-specific behavior:
 The page loads only:
 
 - `/assets/style.css` (compiled locally by Tailwind)
+- `/assets/site.js` (local search and back-to-top behaviour)
 - local images and favicons
+- `/search-index.json` when you open, hover, or focus the search control
 - an optional local RSS feed
 
-External domains appear only as ordinary `<a href>` links, and nothing is requested from them until a visitor clicks.
+External domains appear only as ordinary `<a href>` links, and nothing is requested from them until a visitor clicks. The search index and script are same-origin static files; no query or visit data is sent anywhere.
 
 ## Deploying
 

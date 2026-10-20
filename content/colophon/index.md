@@ -22,7 +22,7 @@ The original source code for this website is available [here](https://github.com
 
 ## Credits
 
-This is a neobrutalist rewrite of the original site. It is built with hand-written HTML generated from Markdown and [Tailwind CSS](https://tailwindcss.com/) compiled locally. There is no client-side JavaScript, no analytics, and no third-party requests.
+This is a neobrutalist rewrite of the original site. It is built with hand-written HTML generated from Markdown and [Tailwind CSS](https://tailwindcss.com/) compiled locally. A small local script powers post search and the back-to-top control. There is no analytics and no third-party requests.
 
 The original design was built with [Hugo](https://gohugo.io/) and the [Blowfish theme](https://blowfish.page/) by [Nuno Coração](https://n9o.xyz/). The profile photo and favicons come from the original site. The background is a CSS grid rather than an image, so there is nothing extra to download.
 
@@ -30,9 +30,9 @@ The original design was built with [Hugo](https://gohugo.io/) and the [Blowfish 
 
 This site ships no analytics, no cookies, no trackers, and no ads.
 
-If the site is hosted behind a service like Cloudflare, that provider may log basic request data at the edge. I don't use it, and there is no client-side code here to collect anything.
+If the site is hosted behind a service like Cloudflare, that provider may log basic request data at the edge. I don't use it, and there is no client-side code here that collects anything.
 
-The only requests to other domains happen when you choose to click an external link.
+The only requests to other domains happen when you choose to click an external link. Search runs entirely in your browser; the index is a static file served from this domain.
 
 ## Usage and License
 
