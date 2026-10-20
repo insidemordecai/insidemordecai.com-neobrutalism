@@ -996,14 +996,11 @@ function layout({
   <main id="main" class="flex-1">${content}</main>
   <footer class="site-footer border-t-4 border-ink">
     <div class="mx-auto max-w-6xl px-4 py-10">
-      <div class="flex flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
-        <div class="max-w-sm">
-          <a class="inline-flex items-center gap-3" href="/" aria-label="${esc(SITE.title)} — home">
-            <span class="grid h-10 w-10 place-items-center border-[3px] border-ink bg-acid font-black">MK</span>
-            <span class="text-sm font-black uppercase tracking-tight">${esc(SITE.title)}</span>
-          </a>
-          <p class="mt-4 text-sm leading-relaxed opacity-80">${esc(SITE.description)}</p>
-        </div>
+      <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+        <a class="inline-flex items-center gap-3" href="/" aria-label="${esc(SITE.title)} — home">
+          <span class="grid h-10 w-10 place-items-center border-[3px] border-ink bg-acid font-black">MK</span>
+          <span class="text-sm font-black uppercase tracking-tight">${esc(SITE.title)}</span>
+        </a>
         <nav aria-label="Footer">
           <ul class="flex flex-wrap gap-x-6 gap-y-2 text-sm font-bold">
             <li><a href="/categories/">Categories</a></li>
