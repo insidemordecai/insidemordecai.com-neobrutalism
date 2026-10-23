@@ -24,20 +24,23 @@ Then open <http://localhost:4173>.
 | `npm run serve` | Serves `dist/` at <http://localhost:4173> |
 | `npm run check` | Checks links, assets, anchors, alt text, IDs, and the RSS feeds |
 | `npm run check:feed` | Validates the generated RSS feeds only |
+| `npm run sync:content -- ../insidemordecai.com` | Copies upstream content into `content/` |
 | `npm run dev` | Build, then serve |
 
 ## Project structure
 
 ```text
-content/              Markdown posts and pages (the source of truth)
+content/              Markdown posts and pages, synced from upstream
   posts/              one folder per post, optional img/ inside
   about/ links/ ...   standalone pages
+.github/workflows/    sync, build, and GitHub Pages deployment
 assets/img/           profile and Open Graph image
 assets/site.js        local search, mobile navigation, and back-to-top enhancements
 static/               favicons, CNAME, manifest source
 src/input.css         Tailwind theme, components, article typography
 build.mjs             static site generator and page templates
 scripts/serve.mjs     dependency-free preview server
+scripts/sync-content.mjs
 scripts/check-links.mjs
 scripts/check-feed.mjs
 dist/                 generated output (git-ignored)
@@ -169,14 +172,81 @@ The page loads only:
 
 External domains appear only as ordinary `<a href>` links, and nothing is requested from them until a visitor clicks. The search index and script are same-origin static files; no query or visit data is sent anywhere.
 
-## Deploying
+## Syncing upstream content
 
-Build with `npm run build` and publish the `dist/` directory. On Cloudflare Pages or Workers, use:
+`.github/workflows/deploy.yml` checks out the public upstream repository
+[`insidemordecai/insidemordecai.com`](https://github.com/insidemordecai/insidemordecai.com),
+copies its entire `content/` directory into this clone, builds, validates, and
+deploys.
 
-- Build command: `npm run build`
-- Output directory: `dist`
+- It runs on every push to `main`, manually via **Actions → Sync content and deploy → Run workflow**, and every six hours.
+- New and updated posts, standalone pages, images, categories, tags, and series all come across.
+- `content/colophon/index.md` is a deliberate local override and is restored after each sync so the clone-specific colophon is not overwritten.
+- Nothing is committed or deployed if `npm run build` or `npm run check` fails.
+- A content change is committed back to `main` as `github-actions[bot]`, then `dist/` is published to the `gh-pages` branch.
 
-`static/CNAME` is copied into `dist/` for the custom domain. The same output works on GitHub Pages, Netlify, or any static host.
+To sync locally:
+
+```sh
+npm run sync:content -- ../insidemordecai.com
+```
+
+If upstream becomes private, add a read-only token to the upstream checkout step.
+
+## Deploying to GitHub Pages
+
+The workflow publishes `dist/` to the `gh-pages` branch with
+`peaceiris/actions-gh-pages`. The custom domain is
+**`neobrutalist.insidemordecai.com`**.
+
+One-time GitHub setup:
+
+1. Open **Settings → Pages**.
+2. Set **Source** to **Deploy from a branch**.
+3. Choose branch **`gh-pages`** and folder **`/ (root)`**.
+4. Set the custom domain to `neobrutalist.insidemordecai.com`.
+5. Enable **Enforce HTTPS** once GitHub has issued the certificate.
+
+One-time Cloudflare DNS setup:
+
+```text
+Type:    CNAME
+Name:    neobrutalist
+Target:  insidemordecai.github.io
+Proxy:   DNS only
+TTL:     Auto
+```
+
+Do **not** point the subdomain at GitHub's IP addresses. GitHub Pages uses
+`insidemordecai.github.io` as the CNAME target for project sites. The A records
+below are only for an apex/root domain, not for `neobrutalist`:
+
+```text
+185.199.108.153
+185.199.109.153
+185.199.110.153
+185.199.111.153
+```
+
+If you ever use the apex domain, GitHub's IPv6 records are:
+
+```text
+2606:50c0:8000::153
+2606:50c0:8001::153
+2606:50c0:8002::153
+2606:50c0:8003::153
+```
+
+Keep Cloudflare's proxy **off** until GitHub has issued the certificate. After
+HTTPS is confirmed, proxying can be enabled with **Full (strict)** SSL.
+
+`static/CNAME` is copied into `dist/` and the workflow also writes the CNAME
+into the published branch. The build sets `SITE_URL` to
+`https://neobrutalist.insidemordecai.com` so canonical URLs, the sitemap, RSS,
+and Open Graph metadata use the new host.
+
+Cloudflare Pages or Workers can also host the same `dist/` output with build
+command `npm run build` and output directory `dist`.
 
 ## Notes
 

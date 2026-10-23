@@ -1,0 +1,74 @@
+name: Sync content and deploy
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  sync-build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the site
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check out upstream content
+        uses: actions/checkout@v4
+        with:
+          repository: insidemordecai/insidemordecai.com
+          path: .upstream
+          fetch-depth: 1
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Sync content
+        run: npm run sync:content -- .upstream
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          SITE_URL: https://neobrutalist.insidemordecai.com
+
+      - name: Validate
+        run: npm run check
+
+      - name: Commit synced content
+        run: |
+          if [ -z "$(git status --porcelain -- content)" ]; then
+            echo "No content changes."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add content
+          git commit -m "Sync content from upstream"
+          git push
+
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./dist
+          cname: neobrutalist.insidemordecai.com
+          force_orphan: true
