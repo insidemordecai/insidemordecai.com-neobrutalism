@@ -1,6 +1,6 @@
 # insidemordecai.com — neobrutalist clone
 
-> **Experimental project:** This is an experiment in coding agents, specifically OpenCode using DeepSeek V4.1 Flash Free. It is a static clone/rebuild, not the production site.
+> **Experimental project:** This is an experiment in coding agents, specifically OpenCode with free models. It is a static clone/rebuild, not the production site.
 
 A static, neobrutalist rebuild of [insidemordecai.com](https://insidemordecai.com). It keeps all published posts, the standalone pages, categories, tags, series, pagination, RSS, and the old URL aliases — but drops Hugo, Blowfish, analytics, and every third-party runtime request.
 
