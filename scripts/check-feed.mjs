@@ -80,8 +80,12 @@ if (process.platform !== "win32") {
       stdio: "ignore",
     });
     console.log("  index.xml: well-formed XML");
-  } catch {
-    report("index.xml", "xmllint reported a problem");
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      console.log("  index.xml: xmllint not installed; skipped XML validation");
+    } else {
+      report("index.xml", "xmllint reported a problem");
+    }
   }
 }
 
