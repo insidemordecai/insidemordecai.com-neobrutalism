@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://neobrutalist.insidemordecai.com/sitemap.xml
