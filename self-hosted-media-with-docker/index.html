@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Self Hosted Media With Docker · Mordecai Kipng’etich</title>
+  <meta name="description" content="How I built and run my self hosted media stack with Docker, Jellyfin and the Arr apps.">
+  <meta name="author" content="Mordecai Kipng’etich">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#009bad" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0a1114" media="(prefers-color-scheme: dark)">
+  <link rel="canonical" href="https://neobrutalist.insidemordecai.com/self-hosted-media-with-docker/">
+  <link rel="stylesheet" href="/assets/style.css">
+  <noscript><style>@media (max-width:639px){.site-nav{display:flex!important;order:3;flex-basis:100%;flex-direction:column;align-items:stretch;gap:0;margin-top:.5rem;border-top:3px solid var(--color-ink);padding-top:.5rem}.site-nav .nav-link{display:block;border-width:0 0 2px;border-style:dashed;border-color:color-mix(in srgb,var(--color-ink) 25%,transparent);padding:.7rem .75rem}.site-nav .nav-link:last-child{border-bottom:0}.nav-toggle{display:none!important}.logo-name{display:block!important}.logo-mark{display:none!important}}</style></noscript>
+  <link rel="alternate" type="application/rss+xml" title="Mordecai Kipng’etich" href="https://neobrutalist.insidemordecai.com/index.xml">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Self Hosted Media With Docker">
+  <meta property="og:description" content="How I built and run my self hosted media stack with Docker, Jellyfin and the Arr apps.">
+  <meta property="og:url" content="https://neobrutalist.insidemordecai.com/self-hosted-media-with-docker/">
+  <meta property="og:site_name" content="Mordecai Kipng’etich">
+  <meta property="og:image" content="https://neobrutalist.insidemordecai.com/assets/img/social-image.webp">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Self Hosted Media With Docker">
+  <meta name="twitter:description" content="How I built and run my self hosted media stack with Docker, Jellyfin and the Arr apps.">
+  <meta name="twitter:image" content="https://neobrutalist.insidemordecai.com/assets/img/social-image.webp">
+  <meta property="article:published_time" content="2026-02-28T09:00:00.000Z">
+  
+</head>
+<body id="top" class="flex min-h-screen flex-col bg-canvas font-sans text-ink antialiased">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="sticky top-0 z-50 border-b-4 border-ink bg-paper">
+    <div class="nav-shell mx-auto max-w-6xl px-4 py-3">
+      <a class="group flex min-w-0 items-center" href="/" aria-label="Mordecai Kipng’etich — home">
+        <span class="logo-mark h-10 w-10 place-items-center border-[3px] border-ink bg-teal font-black shadow-brutal-sm transition-transform group-hover:-rotate-3">MK</span>
+        <span class="logo-name truncate text-[13px] font-black uppercase tracking-tight">Mordecai Kipng’etich</span>
+      </a>
+      <nav id="site-nav" aria-label="Main" class="site-nav text-xs font-bold sm:text-sm"><a class="nav-link" href="/about/">About</a><a class="nav-link" href="/posts/" aria-current="page">Posts</a><a class="nav-link" href="/links/">Links</a><a class="nav-link" href="/subscribe/">Subscribe</a></nav>
+      <div class="nav-controls">
+        <a class="search-trigger" href="/posts/" data-search-open aria-label="Search posts" aria-haspopup="dialog" aria-controls="search-dialog" aria-keyshortcuts="Meta+K Control+K"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 4.5 4.5"></path></svg><span class="search-keys" aria-hidden="true"><kbd class="search-kbd" data-kbd-mod>Ctrl</kbd><kbd class="search-kbd search-kbd-key">K</kbd></span></a>
+        <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu">
+          <span class="nav-toggle-bars" aria-hidden="true"><span class="nav-toggle-bar"></span><span class="nav-toggle-bar"></span><span class="nav-toggle-bar"></span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+  <main id="main" class="flex-1">
+  <header class="border-b-4 border-ink bg-purple">
+    <div class="mx-auto max-w-6xl px-4 py-8 sm:py-12">
+      <nav aria-label="Breadcrumb" class="font-mono text-[11px] uppercase tracking-widest"><a class="underline decoration-2 underline-offset-2 hover:bg-ink hover:text-paper" href="/">Home</a> <span aria-hidden="true">/</span> <a class="underline decoration-2 underline-offset-2 hover:bg-ink hover:text-paper" href="/posts/">Posts</a></nav>
+      
+      <h1 class="mt-5 max-w-4xl break-words text-4xl font-black uppercase leading-[0.95] tracking-tight sm:text-5xl lg:text-6xl">Self Hosted Media With Docker</h1>
+      <p class="mt-4 max-w-3xl text-base leading-relaxed opacity-80">My homelab setup using a media stack on Docker with Jellyfin and the Arr apps</p>
+      <div class="on-accent-muted mt-6 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] uppercase tracking-widest"><time datetime="2026-02-28">28 February 2026</time><span aria-hidden="true">·</span><span>7 min read</span></div>
+    </div>
+  </header>
+  <div class="mx-auto max-w-6xl px-4 py-10">
+    <div class="grid gap-8 lg:grid-cols-[220px_minmax(0,1fr)]">
+      <aside class="h-fit lg:sticky lg:top-24"><nav aria-label="Table of contents" class="border-[3px] border-ink bg-paper p-4 shadow-brutal-sm"><p class="font-black uppercase tracking-tight">On this page</p><ul class="mt-3 max-h-[calc(100vh-12rem)] space-y-1.5 overflow-auto text-sm"><li class=""><a class="toc-link" href="#hardware">Hardware</a></li><li class=""><a class="toc-link" href="#why-this-stack">Why This Stack</a></li><li class=""><a class="toc-link" href="#folder-mapping">Folder Mapping</a></li><li class=""><a class="toc-link" href="#setup-process">Setup Process</a></li><li class="pl-4"><a class="toc-link" href="#step-0">Step 0</a></li><li class=""><a class="toc-link" href="#qbittorrent">qBittorrent</a></li><li class=""><a class="toc-link" href="#arr-apps">Arr Apps</a></li><li class="pl-4"><a class="toc-link" href="#prowlarr">Prowlarr</a></li><li class="pl-4"><a class="toc-link" href="#flaresolverr">Flaresolverr</a></li><li class="pl-4"><a class="toc-link" href="#radarr">Radarr</a></li><li class="pl-4"><a class="toc-link" href="#sonarr">Sonarr</a></li><li class="pl-4"><a class="toc-link" href="#bazarr">Bazarr</a></li><li class=""><a class="toc-link" href="#jellyfin">Jellyfin</a></li><li class=""><a class="toc-link" href="#jellyseerr">Jellyseerr</a></li><li class=""><a class="toc-link" href="#firewall">Firewall</a></li><li class=""><a class="toc-link" href="#a-note-on-exposing-services">A Note on Exposing Services</a></li><li class=""><a class="toc-link" href="#explore-further">Explore Further</a></li></ul></nav></aside>
+      <div class="min-w-0">
+        <article class="prose-neo max-w-3xl "><p>I originally built this media stack as a complete beginner to homelabbing. 
+It started as a way to learn Docker while automating my setup and slowly turned into something I rely on daily. 
+Over time I refined it to the point where it runs quietly and flawlessly in the background.</p>
+<p>I&#39;m planning to migrate everything to Proxmox soon, so I&#39;m posting my internal documentation before I tear it down. 
+This isn&#39;t the only way to do it.
+It&#39;s simply how I did mine.</p>
+<h2 id="hardware">Hardware<a class="heading-anchor" href="#hardware" aria-label="Link to this section">#</a></h2>
+<p>This runs on my old laptop with an Intel Core i5-7200U with 8 gigs of DDR4 RAM and no dedicated GPU on bare metal Linux. 
+The distro doesn&#39;t really matter since everything runs inside Docker but if you really need to know, I&#39;ve used this setup with Arch Linux, Omarchy (which is basically pre-configured Arch) and CachyOS. 
+Nothing fancy. 
+No enterprise gear. 
+Just hardware I had lying around.</p>
+<h2 id="why-this-stack">Why This Stack<a class="heading-anchor" href="#why-this-stack" aria-label="Link to this section">#</a></h2>
+<ul>
+<li><strong>Jellyfin</strong> because it&#39;s open source. No paid tiers. No &quot;upgrade to unlock this feature&quot;. No authentication that needs to phone home. I want my media server to be mine.</li>
+<li><strong>qBittorrent</strong> because it&#39;s reliable and I&#39;m used to it.</li>
+<li><strong>Prowlarr</strong> because managing indexers in one place is significantly cleaner.</li>
+<li><strong>Radarr / Sonarr / Bazarr</strong> because automation is the whole point.</li>
+<li><strong>Docker</strong> because I can tear this down and spin it back up anywhere.</li>
+</ul>
+<h2 id="folder-mapping">Folder Mapping<a class="heading-anchor" href="#folder-mapping" aria-label="Link to this section">#</a></h2>
+<p>At a high level, all the files live under <code>/data</code> on the host.
+This is my current structure:</p>
+<pre><code>data
+├── torrents
+│   ├── completed
+│   └── incomplete
+└── media
+    ├── movies
+    └── tv
+</code></pre>
+<p>Create your directories before proceeding.
+Here&#39;s an easy command to run in your <code>/data</code> directory if you want a
+similar scheme:</p>
+<pre><code class="language-shell">mkdir -p torrents/{completed,incomplete} &amp;&amp; mkdir -p media/{movies,tv}
+</code></pre>
+<h2 id="setup-process">Setup Process<a class="heading-anchor" href="#setup-process" aria-label="Link to this section">#</a></h2>
+<p>The full <code>docker-compose.yml</code> files and <code>.env.example</code> templates live in
+my homelab repository: <a href="https://github.com/insidemordecai/homelab/tree/blog-media-stack-2026" target="_blank" rel="noopener noreferrer">github.com/insidemordecai/homelab/tree/blog-media-stack-2026</a>.</p>
+<p>Clone it or download a zip of it.</p>
+<h3 id="step-0">Step 0<a class="heading-anchor" href="#step-0" aria-label="Link to this section">#</a></h3>
+<ul>
+<li>In the root directory, copy all <code>.env.example</code> templates as <code>.env</code> in
+each subdirectory:</li>
+</ul>
+<pre><code class="language-shell">find . -name &#39;.env.example&#39; -execdir cp .env.example .env \;
+</code></pre>
+<ul>
+<li>Navigate to the directory with the <code>docker-compose.yml</code> file.</li>
+<li>Add your user to the <code>docker</code> group so you don&#39;t need <code>sudo</code> for every
+command:</li>
+</ul>
+<pre><code class="language-shell">sudo usermod -aG docker $USER
+newgrp docker
+</code></pre>
+<ul>
+<li>Change ownership of the data volume specified in the <code>.env</code> file so all
+services can access it:</li>
+</ul>
+<pre><code class="language-shell">chown -R 1000:1000 /data/volume/in/.env/file
+</code></pre>
+<ul>
+<li>Create a shared Docker network: (I prefer this approach with Cloudflare Tunnels)</li>
+</ul>
+<pre><code class="language-shell">docker network create stacknet
+</code></pre>
+<ul>
+<li>Lastly, use the appropriate commands with the containers:</li>
+</ul>
+<pre><code class="language-shell">docker compose up -d # to deploy containers
+docker compose stop # to stop containers
+docker compose rm # to remove containers (stop them first)
+</code></pre>
+<ul>
+<li>Now configure each application.</li>
+</ul>
+<div class="neo-alert neo-alert-caution"><p class="neo-alert-label">Caution</p><div class="neo-alert-body"><p><code>.env</code> files in my repository are ignored by Git. 
+Do not commit or push tokens or credentials.</p>
+</div></div>
+<h2 id="qbittorrent">qBittorrent<a class="heading-anchor" href="#qbittorrent" aria-label="Link to this section">#</a></h2>
+<p>Launch qBittorrent and log in.
+The username is <code>admin</code> while the password is randomly generated on first launch.
+To find the password:</p>
+<pre><code class="language-shell">docker logs qbittorrent
+</code></pre>
+<p>Change the credentials under <strong>Web UI → Authentication</strong>.</p>
+<p>Configure qBittorrent to your liking.
+My preferences are:</p>
+<ul>
+<li>Web UI → Authentication<ul>
+<li>Bypass authentication for clients on localhost</li>
+<li>Set &quot;Ban client after consecutive failures&quot; to 0 (be careful if
+exposing qBittorrent)</li>
+</ul>
+</li>
+<li>Downloads → Saving Management<ul>
+<li>Default save path: <code>/data/torrents/completed</code></li>
+<li>Keep incomplete torrents in: <code>/data/torrents/incomplete</code></li>
+<li>Enable Automatic torrent management</li>
+</ul>
+</li>
+<li>Connections → Listening Port<ul>
+<li>Match whatever you forwarded on your router</li>
+</ul>
+</li>
+<li>BitTorrent<ul>
+<li>Configure queueing and seeding limits to your liking</li>
+</ul>
+</li>
+</ul>
+<h2 id="arr-apps">Arr Apps<a class="heading-anchor" href="#arr-apps" aria-label="Link to this section">#</a></h2>
+<h3 id="prowlarr">Prowlarr<a class="heading-anchor" href="#prowlarr" aria-label="Link to this section">#</a></h3>
+<p>Go to <strong>Settings → Download Clients</strong> and add qBittorrent.</p>
+<p>Match the Web UI port (default 8080) and enter credentials.
+Host can be <code>qbittorrent</code>, test and save.</p>
+<p>Add your indexers, test and save.</p>
+<h3 id="flaresolverr">Flaresolverr<a class="heading-anchor" href="#flaresolverr" aria-label="Link to this section">#</a></h3>
+<p>No configuration required in the container itself.</p>
+<p>In Prowlarr:</p>
+<ul>
+<li>Settings → Indexers</li>
+<li>Add Flaresolverr</li>
+<li>Host: <code>http://flaresolverr:8191/</code></li>
+<li>Tag: <code>flaresolverr</code></li>
+</ul>
+<p>Attach the tag to any problematic indexer that needs to bypass Cloudflare Captcha.</p>
+<h3 id="radarr">Radarr<a class="heading-anchor" href="#radarr" aria-label="Link to this section">#</a></h3>
+<p>Under <strong>Settings → Media Management</strong>, add Root Folder: <code>/data/media/movies</code> (match your <code>docker-compose.yml</code>)</p>
+<p>Under <strong>Settings → Download Clients</strong>, add qBittorrent (similar process to Prowlarr above) and test.</p>
+<p>Configure <strong>Remote Path Mapping</strong>:</p>
+<ul>
+<li>Host: <code>localhost</code></li>
+<li>Remote path: <code>/WHERE_YOUR_DATA_VOLUME_IS/data/torrents/completed</code></li>
+<li>Local path: <code>/data/torrents/completed</code></li>
+</ul>
+<p>Copy the API key from <strong>Settings → General</strong>.</p>
+<p>In Prowlarr:</p>
+<ul>
+<li>Settings → Apps</li>
+<li>Add Radarr</li>
+<li>Use <code>http://container-name:port</code> format in the Prowlarr/Radarr server field</li>
+<li>Paste the API key</li>
+</ul>
+<p>My tweaks:</p>
+<ul>
+<li>Media Management<ul>
+<li>Check &quot;Unmonitor Delete Movies&quot;</li>
+<li>Set &quot;Proper and Repacks&quot; to &quot;Do Not Prefer&quot;</li>
+<li>Adjust Movie Folder Format (I include IMDb ID inline with <a href="https://jellyfin.org/docs/general/server/media/movies" target="_blank" rel="noopener noreferrer">Jellyfin&#39;s naming scheme</a>)</li>
+</ul>
+</li>
+<li>Custom Formats<ul>
+<li>Medium File Size  - set your minimum and max file size for media downloaded and check &#39;Required&#39;. You can create another for Small and Large file sizes if desired.</li>
+<li>x264 - use preset under <em>Release Title</em> and check <em>Required</em> to find files encoded with H.264.</li>
+<li>x265 - use preset under <em>Release Title</em> and check <em>Required</em> to find files encoded with H.265.</li>
+<li>Repack/Proper from <a href="https://trash-guides.info/Radarr/Radarr-collection-of-custom-formats/#repackproper" target="_blank" rel="noopener noreferrer">TRaSH Guide&#39;s Collection</a> to allow Radarr to still pick repacks/proper files.</li>
+</ul>
+</li>
+<li>Profiles<ul>
+<li>Disable Remux, they tend to be large files.</li>
+<li>Score the custom formats according to preference e.g 1000 for Medium File Size, 100 for Repack/Proper and another score x264 and x265.</li>
+</ul>
+</li>
+</ul>
+<h3 id="sonarr">Sonarr<a class="heading-anchor" href="#sonarr" aria-label="Link to this section">#</a></h3>
+<p>Same process as Radarr, but Root Folder: <code>/data/media/tv</code>.</p>
+<p>Configure Download Client and Remote Path Mapping the same way.
+Link Sonarr to Prowlarr the same way using the API key.</p>
+<p>In Media Management:</p>
+<ul>
+<li>Follow <a href="https://jellyfin.org/docs/general/server/media/shows" target="_blank" rel="noopener noreferrer">Jellyfin TV naming scheme</a> to Include IMDb ID in <em>Series Folder Format</em>.</li>
+<li>Check <em>Rename Episodes</em></li>
+</ul>
+<h3 id="bazarr">Bazarr<a class="heading-anchor" href="#bazarr" aria-label="Link to this section">#</a></h3>
+<p>Under <strong>Settings → Sonarr</strong>, enable and configure connection.
+Set the minimum score in <strong>Options</strong> to <code>90</code> (TRaSH-Guide recommendation).</p>
+<p>Under <strong>Settings → Radarr</strong>, enable and configure the connection.
+Minimum score: <code>80</code></p>
+<p>Under <strong>Settings → Languages</strong>, pick your desired language under <em>Languages Filter</em>.
+Create a Language Profile under <em>Languages Profile</em> and assign it as default for Series and
+Movies under <em>Default Language Profiles For Newly Added Shows</em>.</p>
+<p>Add subtitle providers under <strong>Settings → Providers</strong>.
+Create an account with a provider such as <a href="https://opensubtitles.com" target="_blank" rel="noopener noreferrer">opensubtitles.com</a> first.</p>
+<p>Under <strong>Settings → Subtitles</strong>:</p>
+<ul>
+<li>Enable &#39;Ignore Embedded PGS Subtitles&#39; and &#39;Ignore Embedded ASS Subtitles&#39; under <em>Embedded Subtitles Handling</em>. This is important if your media player has issues with these type of subtitles e.g Jellyfin for Samsung TV (check out <a href="https://github.com/PatrickSt1991/Samsung-Jellyfin-Installer" target="_blank" rel="noopener noreferrer">Jellyfin 2 Samsung</a> and <a href="https://github.com/Georift/install-jellyfin-tizen" target="_blank" rel="noopener noreferrer">Install Jellyfin Tizen</a> for how to sideload the app)</li>
+<li>Enable &#39;Automatic Subtitles Audio Synchronization&#39; under <em>Audio Synchronization / Alignment</em>.</li>
+<li>Score Threshold:<ul>
+<li>Series: <code>96</code></li>
+<li>Movies: <code>86</code></li>
+</ul>
+</li>
+</ul>
+<h2 id="jellyfin">Jellyfin<a class="heading-anchor" href="#jellyfin" aria-label="Link to this section">#</a></h2>
+<p>Complete initial setup in browser and map your libraries:</p>
+<ul>
+<li>Movies: <code>/data/media/movies</code></li>
+<li>TV: <code>/data/media/tv</code></li>
+</ul>
+<p>That&#39;s it.
+Tweak the settings to your liking.</p>
+<h2 id="jellyseerr">Jellyseerr<a class="heading-anchor" href="#jellyseerr" aria-label="Link to this section">#</a></h2>
+<div class="neo-alert neo-alert-note"><p class="neo-alert-label">Note</p><div class="neo-alert-body"><p>And wouldn’t you know it, just after posting this article I learned that the Seerr team <a href="https://docs.seerr.dev/blog/seerr-release" target="_blank" rel="noopener noreferrer">announced</a> they’ll be merging Overseerr and Jellyseerr. 
+You can find the <a href="https://docs.seerr.dev/migration-guide" target="_blank" rel="noopener noreferrer">migration guide here</a>.
+Also, you can find my Seerr implementation on my <a href="https://github.com/insidemordecai/homelab" target="_blank" rel="noopener noreferrer">GitHub repo</a>.</p>
+</div></div>
+<p>Follow the on-screen guide.</p>
+<ul>
+<li>Jellyfin hostname: <code>jellyfin</code></li>
+<li>Leave the port as is unless you had changed this</li>
+<li>Test and save, the API keys will auto-configure</li>
+<li>Add Radarr and Sonarr</li>
+</ul>
+<h2 id="firewall">Firewall<a class="heading-anchor" href="#firewall" aria-label="Link to this section">#</a></h2>
+<p>You may need to allow certain ports, but only if necessary.</p>
+<p>For example, if using <code>ufw</code>:</p>
+<pre><code class="language-shell">sudo ufw allow 6881/tcp #default qBittorrent listening port
+sudo ufw allow 6881/udp
+</code></pre>
+<p>Be deliberate. 
+Don&#39;t open ports blindly.</p>
+<h2 id="a-note-on-exposing-services">A Note on Exposing Services<a class="heading-anchor" href="#a-note-on-exposing-services" aria-label="Link to this section">#</a></h2>
+<p>If you decide to expose any of these services outside your local network, understand the risks first.</p>
+<p>Do not just forward ports and hope for the best. 
+Use proper authentication, reverse proxies, or secure tunnels. 
+Know what you&#39;re exposing and why.</p>
+<p>This stack runs perfectly fine entirely within a local network.
+The next post will show <a href="/homelab-cloudflare-tunnel/">how to use Cloudflare Tunnels to securely expose some services</a>.</p>
+<hr>
+<p>The full compose files and configuration templates are available here:
+<a href="https://github.com/insidemordecai/homelab/tree/blog-media-stack-2026" target="_blank" rel="noopener noreferrer">github.com/insidemordecai/homelab/tree/blog-media-stack-2026</a></p>
+<p>This setup has been stable for me for a long time.
+If I ever need to rebuild it on another machine, it&#39;s just a matter of cloning the repo and running <code>docker compose up -d</code>.</p>
+<p>Next step: rebuilding this properly under Proxmox.</p>
+<h2 id="explore-further">Explore Further<a class="heading-anchor" href="#explore-further" aria-label="Link to this section">#</a></h2>
+<ul>
+<li><a href="https://wiki.servarr.com/" target="_blank" rel="noopener noreferrer">Servarr Wiki</a></li>
+<li><a href="https://trash-guides.info/" target="_blank" rel="noopener noreferrer">TRaSH Guides</a></li>
+<li><a href="https://github.com/TechHutTV/homelab/" target="_blank" rel="noopener noreferrer">TechHut&#39;s Setup</a></li>
+</ul>
+</article>
+        <div class="mt-10 flex flex-wrap items-center gap-x-4 gap-y-2 border-t-2 border-ink/20 pt-5 font-mono text-xs"><span class="uppercase tracking-widest text-ink/60">Filed under</span><a class="underline decoration-ink/25 underline-offset-4 hover:decoration-ink" href="/categories/technical/">Technical</a><a class="text-ink/60 hover:text-ink hover:underline" href="/tags/homelab/">#Homelab</a><a class="text-ink/60 hover:text-ink hover:underline" href="/tags/docker/">#Docker</a><a class="text-ink/60 hover:text-ink hover:underline" href="/tags/self-hosting/">#Self-Hosting</a></div>
+        <div class="mt-12 border-[3px] border-ink bg-acid p-6 shadow-brutal sm:flex sm:items-center sm:justify-between sm:gap-6"><div><p class="text-xl font-black uppercase tracking-tight">Got thoughts?</p><p class="mt-1 text-sm font-bold">Reply by email — I read everything.</p></div><a class="btn mt-4 bg-paper sm:mt-0" href="mailto:mk@insidemordecai.com?subject=Re%3A%20Self%20Hosted%20Media%20With%20Docker">Reply by email →</a></div>
+        <nav aria-label="Post navigation" class="mt-10 grid gap-4 sm:grid-cols-2"><a class="card p-5" href="/homelab-cloudflare-tunnel/"><p class="font-mono text-[10px] uppercase tracking-widest text-ink/60">← Newer</p><p class="mt-2 font-black leading-tight">Cloudflare Tunnel for Homelab Services</p></a><a class="card p-5 sm:text-right" href="/hugo-migration-cloudflare-pages-workers/"><p class="font-mono text-[10px] uppercase tracking-widest text-ink/60">Older →</p><p class="mt-2 font-black leading-tight">Migrating a Hugo Site from Cloudflare Pages to Workers</p></a></nav>
+        <div class="mt-8"><a class="font-black underline decoration-4 decoration-teal underline-offset-4 hover:bg-acid" href="/posts/">← Back to all posts</a></div>
+      </div>
+    </div>
+  </div></main>
+  <footer class="site-footer border-t-4 border-ink">
+    <div class="mx-auto max-w-6xl px-4 py-10">
+      <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+        <a class="inline-flex items-center gap-3" href="/" aria-label="Mordecai Kipng’etich — home">
+          <span class="grid h-10 w-10 place-items-center border-[3px] border-ink bg-acid font-black">MK</span>
+          <span class="text-sm font-black uppercase tracking-tight">Mordecai Kipng’etich</span>
+        </a>
+        <nav aria-label="Footer">
+          <ul class="flex flex-wrap gap-x-6 gap-y-2 text-sm font-bold">
+            <li><a href="/categories/">Categories</a></li>
+            <li><a href="/tags/">Tags</a></li>
+            <li><a href="/series/">Series</a></li>
+            <li><a href="/contact/">Contact</a></li>
+            <li><a href="/support/">Support</a></li>
+            <li><a href="/colophon/">Colophon</a></li>
+            <li><a href="/index.xml">RSS</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </footer>
+  <a class="back-to-top" id="back-to-top" href="#top" aria-label="Back to top"><span aria-hidden="true">↑</span><span class="back-to-top-label">Top</span></a>
+  <dialog id="search-dialog" class="search-dialog" aria-labelledby="search-dialog-title">
+    <div class="search-panel">
+      <h2 id="search-dialog-title" class="sr-only">Search posts</h2>
+      <div class="search-bar">
+        <svg class="search-bar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 4.5 4.5"></path></svg>
+        <label class="sr-only" for="search-input">Search posts</label>
+        <input id="search-input" class="search-input" type="search" placeholder="Search posts…" autocomplete="off" spellcheck="false" aria-controls="search-results" aria-describedby="search-help">
+        <button class="search-close" type="button" data-search-close aria-label="Close search">Esc</button>
+      </div>
+      <p class="search-help" id="search-help">Titles, tags, categories, and full text. Use <kbd data-kbd-mod>Ctrl</kbd> <kbd>K</kbd> to open, ↑↓ to move, Enter to read.</p>
+      <div class="search-results" id="search-results" role="list" aria-label="Search results"></div>
+      <p class="search-status" id="search-status" role="status" aria-live="polite"></p>
+    </div>
+  </dialog>
+  <script src="/assets/site.js" defer></script>
+</body>
+</html>

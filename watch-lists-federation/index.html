@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Fragmentation Problem of Watch Lists · Mordecai Kipng’etich</title>
+  <meta name="description" content="A case for federated watch lists">
+  <meta name="author" content="Mordecai Kipng’etich">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#009bad" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0a1114" media="(prefers-color-scheme: dark)">
+  <link rel="canonical" href="https://neobrutalist.insidemordecai.com/watch-lists-federation/">
+  <link rel="stylesheet" href="/assets/style.css">
+  <noscript><style>@media (max-width:639px){.site-nav{display:flex!important;order:3;flex-basis:100%;flex-direction:column;align-items:stretch;gap:0;margin-top:.5rem;border-top:3px solid var(--color-ink);padding-top:.5rem}.site-nav .nav-link{display:block;border-width:0 0 2px;border-style:dashed;border-color:color-mix(in srgb,var(--color-ink) 25%,transparent);padding:.7rem .75rem}.site-nav .nav-link:last-child{border-bottom:0}.nav-toggle{display:none!important}.logo-name{display:block!important}.logo-mark{display:none!important}}</style></noscript>
+  <link rel="alternate" type="application/rss+xml" title="Mordecai Kipng’etich" href="https://neobrutalist.insidemordecai.com/index.xml">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="The Fragmentation Problem of Watch Lists">
+  <meta property="og:description" content="A case for federated watch lists">
+  <meta property="og:url" content="https://neobrutalist.insidemordecai.com/watch-lists-federation/">
+  <meta property="og:site_name" content="Mordecai Kipng’etich">
+  <meta property="og:image" content="https://neobrutalist.insidemordecai.com/assets/img/social-image.webp">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="The Fragmentation Problem of Watch Lists">
+  <meta name="twitter:description" content="A case for federated watch lists">
+  <meta name="twitter:image" content="https://neobrutalist.insidemordecai.com/assets/img/social-image.webp">
+  <meta property="article:published_time" content="2025-12-24T09:12:28.000Z">
+  
+</head>
+<body id="top" class="flex min-h-screen flex-col bg-canvas font-sans text-ink antialiased">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="sticky top-0 z-50 border-b-4 border-ink bg-paper">
+    <div class="nav-shell mx-auto max-w-6xl px-4 py-3">
+      <a class="group flex min-w-0 items-center" href="/" aria-label="Mordecai Kipng’etich — home">
+        <span class="logo-mark h-10 w-10 place-items-center border-[3px] border-ink bg-teal font-black shadow-brutal-sm transition-transform group-hover:-rotate-3">MK</span>
+        <span class="logo-name truncate text-[13px] font-black uppercase tracking-tight">Mordecai Kipng’etich</span>
+      </a>
+      <nav id="site-nav" aria-label="Main" class="site-nav text-xs font-bold sm:text-sm"><a class="nav-link" href="/about/">About</a><a class="nav-link" href="/posts/" aria-current="page">Posts</a><a class="nav-link" href="/links/">Links</a><a class="nav-link" href="/subscribe/">Subscribe</a></nav>
+      <div class="nav-controls">
+        <a class="search-trigger" href="/posts/" data-search-open aria-label="Search posts" aria-haspopup="dialog" aria-controls="search-dialog" aria-keyshortcuts="Meta+K Control+K"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 4.5 4.5"></path></svg><span class="search-keys" aria-hidden="true"><kbd class="search-kbd" data-kbd-mod>Ctrl</kbd><kbd class="search-kbd search-kbd-key">K</kbd></span></a>
+        <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu">
+          <span class="nav-toggle-bars" aria-hidden="true"><span class="nav-toggle-bar"></span><span class="nav-toggle-bar"></span><span class="nav-toggle-bar"></span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+  <main id="main" class="flex-1">
+  <header class="border-b-4 border-ink bg-coral">
+    <div class="mx-auto max-w-6xl px-4 py-8 sm:py-12">
+      <nav aria-label="Breadcrumb" class="font-mono text-[11px] uppercase tracking-widest"><a class="underline decoration-2 underline-offset-2 hover:bg-ink hover:text-paper" href="/">Home</a> <span aria-hidden="true">/</span> <a class="underline decoration-2 underline-offset-2 hover:bg-ink hover:text-paper" href="/posts/">Posts</a></nav>
+      
+      <h1 class="mt-5 max-w-4xl break-words text-4xl font-black uppercase leading-[0.95] tracking-tight sm:text-5xl lg:text-6xl">The Fragmentation Problem of Watch Lists</h1>
+      <p class="mt-4 max-w-3xl text-base leading-relaxed opacity-80">A case for federated watch lists</p>
+      <div class="on-accent-muted mt-6 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] uppercase tracking-widest"><time datetime="2025-12-24">24 December 2025</time><span aria-hidden="true">·</span><span>6 min read</span></div>
+    </div>
+  </header>
+  <div class="mx-auto max-w-6xl px-4 py-10">
+    <div class="grid gap-8 ">
+      
+      <div class="min-w-0">
+        <article class="prose-neo max-w-3xl mx-auto"><blockquote>
+<p>All I want for Christmas is to find that darn movie I’ve been meaning to watch. What was it called again? I could have sworn I bookmarked it somewhere…</p>
+<p>— Janko Roettgers on <a href="https://www.lowpass.cc/p/streaming-wish-lists-bookmarks-federation-netflix-plex" target="_blank" rel="noopener noreferrer">Streaming wish lists are broken. Federation could fix them.</a></p>
+</blockquote>
+<p>Like many of you, I have a list that endlessly grows and that is a list of shows and films I want to watch.
+The process is always the same.
+I find something I like from YouTube, or a friend, or an article and I simply append it to my master list. </p>
+<p>For a long time I tracked this on paper, but I made the switch to using <a href="https://www.tvtime.com/" target="_blank" rel="noopener noreferrer">TV Time</a> very early on.
+The process remained the same but my list was now more &quot;mobile&quot;. 
+With this switch to digital, my media tracking did not end up simpler, but much more segregated. 
+I had a long list on Netflix, another on Plex (when I liked it back then), with some on Showmax while others were somehow on Google as well.
+Quitting Netflix made it quite a tedious process to migrate my watch list, but I soldiered on.
+I doubled down on having everything on TV Time and my setup was everything I could wish for. 
+I could track what I wanted, get a heads up when my shows aired and plan around film releases. </p>
+<p>All was rosy until the frustrations crept in. 
+The app didn&#39;t seem to improve, updates reduced, bugs here and there but that was just the tip of the iceberg.
+My biggest drawback with the app was (and still is) how laggy it became over the years.
+I would open the app and be faced with a spinning wheel for what seemed like an eternity. 
+Sometimes I&#39;d simply go back to where I got my recommendation and screenshot the film/show name or write it down to add to TV Time later. </p>
+<p>The issues made it seem like I was moving back to the days when I had a single list on paper. </p>
+<p>So in 2024, I spent some time on many subreddits searching for a different solution. 
+Nothing could match my criteria and the perfect TV Time alternative eluded me. 
+The simplicity of my setup with how I could track both my films and shows in one place was what I liked most. 
+I didn&#39;t want to opt for platforms that handle only one type of media. </p>
+<p>With no success in my search, I caved in and finally signed up to <a href="https://letterboxd.com/" target="_blank" rel="noopener noreferrer">Letterboxd</a> and <a href="https://www.serializd.com/" target="_blank" rel="noopener noreferrer">Serializd</a>.
+I initially wanted to phase out TV Time but the force of habit made me think otherwise. 
+So... I juggled and still juggle three applications. 
+Definitely not the ideal setup I signed up for.</p>
+<p>Anyway, the process of tracking anything goes like this nowadays: I watch a trailer that I like, fish out my phone, add it to TV Time, actively try to distinguish if the trailer is of a film/show and finally opening Letterboxd/Serializd to add it there too. 
+This is in stark contrast to when I would simply watch something, pull up my phone and add it to TV Time. </p>
+<p>I really wish there was a simpler way to have your data. 
+The huge issue in my case is having to do media tracking in multiple apps when federation seems like a logical solution. 
+Janko Roettgers wishes for a future where you simply add something on Netflix and it gets federated across different applications.</p>
+<blockquote>
+<p>Instead of keeping all watch-list data in a silo, these services should enable consumers to opt into sharing it between services. That way, if I bookmark a movie on Netflix, the Netflix app shares that information with my Plex watch list. Once I watch it, it disappears from both lists again.</p>
+<p>Ideally, I’d want to have a bunch of different ways to enter this kind of data and just as many ways to consume it. Maybe I’d keep one master list maintained by Plex, Google, or another company. But I’d also want to be able to keep smashing that bookmark button in whatever streaming app I’m in and have all my lists across all providers update in real time.</p>
+<p> — Janko Roettgers on <a href="https://www.lowpass.cc/p/streaming-wish-lists-bookmarks-federation-netflix-plex" target="_blank" rel="noopener noreferrer">Streaming wish lists are broken. Federation could fix them.</a></p>
+</blockquote>
+<p>Federation isn&#39;t sexy but oh boy is it useful.
+Its end goal shouldn&#39;t be social media lest it succumb to the same fate as the blockchain (stay with me) where ideology trumped practicality with crypto as its only major use case.
+Media tracking seems more feasible and practical than social media that&#39;s proven difficult and high stakes.
+There won&#39;t be a need for virality, moderation, or algorithmic manipulation. 
+Just simple, low-frequency data.</p>
+<p>The problem is who owns this data and not the platforms themselves.
+I remember how once a movie left Netflix, that&#39;s how it also simply ceased to exist in your watch list with no remnant of what used to be.
+This is a loss of history and not just inconvenience.
+You end up losing proof it ever mattered to you and that&#39;s why federation makes sense.
+The current solution makes the different places act like temporary custodians of this data.
+I should be able to easily migrate something as personal as my taste in media between platforms.
+Our bookmarks should be liberated and only then, will everyone (or at least those as nitpicky as myself) be happy.</p>
+<p>I know this is just but an idea that likely won&#39;t materialise.
+Different networks and platforms have an incentive to keep you locked in.
+Watchlists act as an engagement tool to them. 
+A way to reduce their subscription churn rate. 
+What Janko Roettgers proposes benefits users, not platforms.</p>
+<p>For now we can hope for one neutral, user-controlled list where apps act as clients.
+We can add once, mark as watched once, export our data anytime, and switch apps without losing years of history.</p>
+<p>I know no executive is reading this but I thought I&#39;d chime in with my two cents. 
+A guy can only wish, and in that spirit, happy holidays. </p>
+</article>
+        <div class="mt-10 flex flex-wrap items-center gap-x-4 gap-y-2 border-t-2 border-ink/20 pt-5 font-mono text-xs"><span class="uppercase tracking-widest text-ink/60">Filed under</span><a class="underline decoration-ink/25 underline-offset-4 hover:decoration-ink" href="/categories/opinion/">Opinion</a><a class="text-ink/60 hover:text-ink hover:underline" href="/tags/streaming/">#Streaming</a></div>
+        <div class="mt-12 border-[3px] border-ink bg-acid p-6 shadow-brutal sm:flex sm:items-center sm:justify-between sm:gap-6"><div><p class="text-xl font-black uppercase tracking-tight">Got thoughts?</p><p class="mt-1 text-sm font-bold">Reply by email — I read everything.</p></div><a class="btn mt-4 bg-paper sm:mt-0" href="mailto:mk@insidemordecai.com?subject=Re%3A%20The%20Fragmentation%20Problem%20of%20Watch%20Lists">Reply by email →</a></div>
+        <nav aria-label="Post navigation" class="mt-10 grid gap-4 sm:grid-cols-2"><a class="card p-5" href="/2025-in-books/"><p class="font-mono text-[10px] uppercase tracking-widest text-ink/60">← Newer</p><p class="mt-2 font-black leading-tight">2025 in Books</p></a><a class="card p-5 sm:text-right" href="/living-with-too-many-recommendations/"><p class="font-mono text-[10px] uppercase tracking-widest text-ink/60">Older →</p><p class="mt-2 font-black leading-tight">Living With Too Many Recommendations</p></a></nav>
+        <div class="mt-8"><a class="font-black underline decoration-4 decoration-teal underline-offset-4 hover:bg-acid" href="/posts/">← Back to all posts</a></div>
+      </div>
+    </div>
+  </div></main>
+  <footer class="site-footer border-t-4 border-ink">
+    <div class="mx-auto max-w-6xl px-4 py-10">
+      <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+        <a class="inline-flex items-center gap-3" href="/" aria-label="Mordecai Kipng’etich — home">
+          <span class="grid h-10 w-10 place-items-center border-[3px] border-ink bg-acid font-black">MK</span>
+          <span class="text-sm font-black uppercase tracking-tight">Mordecai Kipng’etich</span>
+        </a>
+        <nav aria-label="Footer">
+          <ul class="flex flex-wrap gap-x-6 gap-y-2 text-sm font-bold">
+            <li><a href="/categories/">Categories</a></li>
+            <li><a href="/tags/">Tags</a></li>
+            <li><a href="/series/">Series</a></li>
+            <li><a href="/contact/">Contact</a></li>
+            <li><a href="/support/">Support</a></li>
+            <li><a href="/colophon/">Colophon</a></li>
+            <li><a href="/index.xml">RSS</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </footer>
+  <a class="back-to-top" id="back-to-top" href="#top" aria-label="Back to top"><span aria-hidden="true">↑</span><span class="back-to-top-label">Top</span></a>
+  <dialog id="search-dialog" class="search-dialog" aria-labelledby="search-dialog-title">
+    <div class="search-panel">
+      <h2 id="search-dialog-title" class="sr-only">Search posts</h2>
+      <div class="search-bar">
+        <svg class="search-bar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 4.5 4.5"></path></svg>
+        <label class="sr-only" for="search-input">Search posts</label>
+        <input id="search-input" class="search-input" type="search" placeholder="Search posts…" autocomplete="off" spellcheck="false" aria-controls="search-results" aria-describedby="search-help">
+        <button class="search-close" type="button" data-search-close aria-label="Close search">Esc</button>
+      </div>
+      <p class="search-help" id="search-help">Titles, tags, categories, and full text. Use <kbd data-kbd-mod>Ctrl</kbd> <kbd>K</kbd> to open, ↑↓ to move, Enter to read.</p>
+      <div class="search-results" id="search-results" role="list" aria-label="Search results"></div>
+      <p class="search-status" id="search-status" role="status" aria-live="polite"></p>
+    </div>
+  </dialog>
+  <script src="/assets/site.js" defer></script>
+</body>
+</html>

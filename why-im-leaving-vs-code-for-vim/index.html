@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>I&#39;m Ditching VS Code · Mordecai Kipng’etich</title>
+  <meta name="description" content="VS Code is good enough but here&#39;s why I prefer Vim.">
+  <meta name="author" content="Mordecai Kipng’etich">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#009bad" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0a1114" media="(prefers-color-scheme: dark)">
+  <link rel="canonical" href="https://neobrutalist.insidemordecai.com/why-im-leaving-vs-code-for-vim/">
+  <link rel="stylesheet" href="/assets/style.css">
+  <noscript><style>@media (max-width:639px){.site-nav{display:flex!important;order:3;flex-basis:100%;flex-direction:column;align-items:stretch;gap:0;margin-top:.5rem;border-top:3px solid var(--color-ink);padding-top:.5rem}.site-nav .nav-link{display:block;border-width:0 0 2px;border-style:dashed;border-color:color-mix(in srgb,var(--color-ink) 25%,transparent);padding:.7rem .75rem}.site-nav .nav-link:last-child{border-bottom:0}.nav-toggle{display:none!important}.logo-name{display:block!important}.logo-mark{display:none!important}}</style></noscript>
+  <link rel="alternate" type="application/rss+xml" title="Mordecai Kipng’etich" href="https://neobrutalist.insidemordecai.com/index.xml">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="I&#39;m Ditching VS Code">
+  <meta property="og:description" content="VS Code is good enough but here&#39;s why I prefer Vim.">
+  <meta property="og:url" content="https://neobrutalist.insidemordecai.com/why-im-leaving-vs-code-for-vim/">
+  <meta property="og:site_name" content="Mordecai Kipng’etich">
+  <meta property="og:image" content="https://neobrutalist.insidemordecai.com/assets/img/social-image.webp">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="I&#39;m Ditching VS Code">
+  <meta name="twitter:description" content="VS Code is good enough but here&#39;s why I prefer Vim.">
+  <meta name="twitter:image" content="https://neobrutalist.insidemordecai.com/assets/img/social-image.webp">
+  <meta property="article:published_time" content="2023-02-15T00:00:00.000Z">
+  
+</head>
+<body id="top" class="flex min-h-screen flex-col bg-canvas font-sans text-ink antialiased">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="sticky top-0 z-50 border-b-4 border-ink bg-paper">
+    <div class="nav-shell mx-auto max-w-6xl px-4 py-3">
+      <a class="group flex min-w-0 items-center" href="/" aria-label="Mordecai Kipng’etich — home">
+        <span class="logo-mark h-10 w-10 place-items-center border-[3px] border-ink bg-teal font-black shadow-brutal-sm transition-transform group-hover:-rotate-3">MK</span>
+        <span class="logo-name truncate text-[13px] font-black uppercase tracking-tight">Mordecai Kipng’etich</span>
+      </a>
+      <nav id="site-nav" aria-label="Main" class="site-nav text-xs font-bold sm:text-sm"><a class="nav-link" href="/about/">About</a><a class="nav-link" href="/posts/" aria-current="page">Posts</a><a class="nav-link" href="/links/">Links</a><a class="nav-link" href="/subscribe/">Subscribe</a></nav>
+      <div class="nav-controls">
+        <a class="search-trigger" href="/posts/" data-search-open aria-label="Search posts" aria-haspopup="dialog" aria-controls="search-dialog" aria-keyshortcuts="Meta+K Control+K"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 4.5 4.5"></path></svg><span class="search-keys" aria-hidden="true"><kbd class="search-kbd" data-kbd-mod>Ctrl</kbd><kbd class="search-kbd search-kbd-key">K</kbd></span></a>
+        <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu">
+          <span class="nav-toggle-bars" aria-hidden="true"><span class="nav-toggle-bar"></span><span class="nav-toggle-bar"></span><span class="nav-toggle-bar"></span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+  <main id="main" class="flex-1">
+  <header class="border-b-4 border-ink bg-lime">
+    <div class="mx-auto max-w-6xl px-4 py-8 sm:py-12">
+      <nav aria-label="Breadcrumb" class="font-mono text-[11px] uppercase tracking-widest"><a class="underline decoration-2 underline-offset-2 hover:bg-ink hover:text-paper" href="/">Home</a> <span aria-hidden="true">/</span> <a class="underline decoration-2 underline-offset-2 hover:bg-ink hover:text-paper" href="/posts/">Posts</a></nav>
+      
+      <h1 class="mt-5 max-w-4xl break-words text-4xl font-black uppercase leading-[0.95] tracking-tight sm:text-5xl lg:text-6xl">I&#39;m Ditching VS Code</h1>
+      <p class="mt-4 max-w-3xl text-base leading-relaxed opacity-80">VS Code is good enough but here&#39;s why I prefer Vim.</p>
+      <div class="on-accent-muted mt-6 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] uppercase tracking-widest"><time datetime="2023-02-15">15 February 2023</time><span aria-hidden="true">·</span><span>4 min read</span></div>
+    </div>
+  </header>
+  <div class="mx-auto max-w-6xl px-4 py-10">
+    <div class="grid gap-8 lg:grid-cols-[220px_minmax(0,1fr)]">
+      <aside class="h-fit lg:sticky lg:top-24"><nav aria-label="Table of contents" class="border-[3px] border-ink bg-paper p-4 shadow-brutal-sm"><p class="font-black uppercase tracking-tight">On this page</p><ul class="mt-3 max-h-[calc(100vh-12rem)] space-y-1.5 overflow-auto text-sm"><li class=""><a class="toc-link" href="#why-i-still-like-vs-code">Why I Still Like VS Code</a></li><li class=""><a class="toc-link" href="#why-vim">Why Vim?</a></li><li class=""><a class="toc-link" href="#the-switch">The Switch</a></li><li class=""><a class="toc-link" href="#hows-the-going">How&#39;s the going?</a></li><li class=""><a class="toc-link" href="#conclusion">Conclusion</a></li><li class=""><a class="toc-link" href="#explore-further">Explore Further</a></li></ul></nav></aside>
+      <div class="min-w-0">
+        <article class="prose-neo max-w-3xl "><p>My journey has been one where I find a text editor I like and I settle with that. I learnt programming around 2015 but nothing too serious, heck, I used Notepad on Windows. By 2016, I got more into it, discovered <a href="https://en.wikipedia.org/wiki/Atom_(text_editor)" target="_blank" rel="noopener noreferrer">Atom</a> and immediately fell in love with it.</p>
+<p>It was marketed towards the kind of person who would tinker with things to suite their needs. Superficially though, I also liked the default colour scheme - One Dark.</p>
+<p>Atom was my ride-or-die even though <a href="https://code.visualstudio.com/" target="_blank" rel="noopener noreferrer">VS Code</a> had gained some traction by now but that was until I joined uni in 2018. I noticed students who were more experienced than I was using VS Code, the least I could do was give it a try. I adopted it and it has been my preferred text editor. So what&#39;s changed?</p>
+<h2 id="why-i-still-like-vs-code">Why I Still Like VS Code<a class="heading-anchor" href="#why-i-still-like-vs-code" aria-label="Link to this section">#</a></h2>
+<p>Yes, I still like VS Code. I have it configured as best as I can to how I like, it&#39;s easy to tweak so we could make a case for why I shouldn&#39;t leave it.</p>
+<p>It has an integrated terminal, an entire marketplace for extensions, easily syncs my settings and has lots of themes. Also, any new technology or programming language will most likely have a guide on how to setup VS Code for it. It can act like an IDE or a simple text editor.</p>
+<p>I still prefer using it for larger projects such as mobile development with Flutter because <strong>it gets the job done.</strong></p>
+<p>These and many more are the reasons why year on year, VS Code leads in various surveys.</p>
+<h2 id="why-vim">Why Vim?<a class="heading-anchor" href="#why-vim" aria-label="Link to this section">#</a></h2>
+<p>My previous encounter with Vim was the classic, enter and get stuck trying to exit. That was until I enrolled for a Software Engineering course with <a href="https://www.alxafrica.com/" target="_blank" rel="noopener noreferrer">ALX Africa</a> and we had to use Vim full time.</p>
+<p>I watched a lot of tutorials on YouTube and one channel that kept popping up was <a href="https://www.youtube.com/c/theprimeagen" target="_blank" rel="noopener noreferrer">ThePrimeagen</a>. Using VS Code after watching him felt inefficient. I mean the dude was  flying through, I couldn&#39;t keep up but it inspired me. </p>
+<p>Vim is <strong>minimal with great freedom</strong> on how maximal you want to make it. I mean minimalism is not the current trend but I still practice some of the learnings from it. </p>
+<p>Coupled with the fact that as a Linux user, I often use the terminal, Vim was essentially shouting my name.</p>
+<h2 id="the-switch">The Switch<a class="heading-anchor" href="#the-switch" aria-label="Link to this section">#</a></h2>
+<p>My course forced me to dive headfirst into Vim since we had to SSH into remote servers and the terminal was our only option.</p>
+<p>We had a two-week period to get the gist of things so my plan was to quickly learn the basics before slowly swimming to the deep end. </p>
+<p>Vimtutor came to the rescue in learning Vim movements and other basic commands, it&#39;s literally a program that runs you through a tutorial of vim.</p>
+<p>I later realised we didn&#39;t need to SSH into ALx Africa&#39;s servers, that was just an easier way to facilitate those who don&#39;t use Linux or don&#39;t have easy access to computers. At this point, I could use VS Code on my PC and forget about Vim but I had the itch from my Atom days to stick and tinker around. </p>
+<p>It felt amazing to use Vim, maybe I&#39;m better than everyone else 😂.</p>
+<h2 id="hows-the-going">How&#39;s the going?<a class="heading-anchor" href="#hows-the-going" aria-label="Link to this section">#</a></h2>
+<p>It&#39;s been about 4 months now, and I&#39;m not ThePrimeagen level but I feel comfortable with Vim.</p>
+<p>I mentioned Vim comes with great freedom on how maximal you want to make it, I started with the simple basics of adding line numbers, configuring indentation, syntax processing etc.</p>
+<p>Thereafter, I discovered <a href="https://www.youtube.com/c/TJDeVries" target="_blank" rel="noopener noreferrer">TJ Devries</a> and opted to go with <a href="https://neovim.io/" target="_blank" rel="noopener noreferrer">Neovim</a> due to some good defaults it packs and the community behind it. I slowly added more to my config, setup plugins, language support and even migrated from Vimscript to Lua.</p>
+<p>Currently I use it for most of my projects.</p>
+<h2 id="conclusion">Conclusion<a class="heading-anchor" href="#conclusion" aria-label="Link to this section">#</a></h2>
+<p>So why I&#39;m I ditching VS Code? I like the minimal nature of Vim, the fact it&#39;s terminal-based, the endless configuration options and it&#39;s just fun. Perhaps ditching is overexaggerating but I will use VS Code way less than I used to. Who knows, I might switch back to it in the far future.</p>
+<p>Vim is a great tool but can be very overwhelming with its steep learning curve. The trick is to add things bit by bit as well as understanding what you add to you config rather than blindly copying someone&#39;s setup. That being said, here&#39;s my dotfiles for inspiration.</p>
+<p>It is also an interesting and fun rabbit hole to go down from vanilla Vim to the variety of flavours. There&#39;s always something to learn.</p>
+<p>Till next time, cheers.</p>
+<h2 id="explore-further">Explore Further<a class="heading-anchor" href="#explore-further" aria-label="Link to this section">#</a></h2>
+<ul>
+<li><a href="https://opensource.com/resources/what-vim" target="_blank" rel="noopener noreferrer">What is Vim?</a></li>
+</ul>
+</article>
+        <div class="mt-10 flex flex-wrap items-center gap-x-4 gap-y-2 border-t-2 border-ink/20 pt-5 font-mono text-xs"><span class="uppercase tracking-widest text-ink/60">Filed under</span><a class="underline decoration-ink/25 underline-offset-4 hover:decoration-ink" href="/categories/updates/">Updates</a><a class="underline decoration-ink/25 underline-offset-4 hover:decoration-ink" href="/categories/opinion/">Opinion</a><a class="text-ink/60 hover:text-ink hover:underline" href="/tags/text-editors/">#Text Editors</a><a class="text-ink/60 hover:text-ink hover:underline" href="/tags/vim/">#Vim</a><a class="text-ink/60 hover:text-ink hover:underline" href="/tags/vs-code/">#VS Code</a></div>
+        <div class="mt-12 border-[3px] border-ink bg-acid p-6 shadow-brutal sm:flex sm:items-center sm:justify-between sm:gap-6"><div><p class="text-xl font-black uppercase tracking-tight">Got thoughts?</p><p class="mt-1 text-sm font-bold">Reply by email — I read everything.</p></div><a class="btn mt-4 bg-paper sm:mt-0" href="mailto:mk@insidemordecai.com?subject=Re%3A%20I'm%20Ditching%20VS%20Code">Reply by email →</a></div>
+        <nav aria-label="Post navigation" class="mt-10 grid gap-4 sm:grid-cols-2"><a class="card p-5" href="/tracing-url-request/"><p class="font-mono text-[10px] uppercase tracking-widest text-ink/60">← Newer</p><p class="mt-2 font-black leading-tight">What Happens When You Type &#39;google.com&#39; Into Your Browser</p></a><a class="card p-5 sm:text-right" href="/custom-domains-with-github-pages/"><p class="font-mono text-[10px] uppercase tracking-widest text-ink/60">Older →</p><p class="mt-2 font-black leading-tight">Setting up Custom Domains on GitHub Pages</p></a></nav>
+        <div class="mt-8"><a class="font-black underline decoration-4 decoration-teal underline-offset-4 hover:bg-acid" href="/posts/">← Back to all posts</a></div>
+      </div>
+    </div>
+  </div></main>
+  <footer class="site-footer border-t-4 border-ink">
+    <div class="mx-auto max-w-6xl px-4 py-10">
+      <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+        <a class="inline-flex items-center gap-3" href="/" aria-label="Mordecai Kipng’etich — home">
+          <span class="grid h-10 w-10 place-items-center border-[3px] border-ink bg-acid font-black">MK</span>
+          <span class="text-sm font-black uppercase tracking-tight">Mordecai Kipng’etich</span>
+        </a>
+        <nav aria-label="Footer">
+          <ul class="flex flex-wrap gap-x-6 gap-y-2 text-sm font-bold">
+            <li><a href="/categories/">Categories</a></li>
+            <li><a href="/tags/">Tags</a></li>
+            <li><a href="/series/">Series</a></li>
+            <li><a href="/contact/">Contact</a></li>
+            <li><a href="/support/">Support</a></li>
+            <li><a href="/colophon/">Colophon</a></li>
+            <li><a href="/index.xml">RSS</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </footer>
+  <a class="back-to-top" id="back-to-top" href="#top" aria-label="Back to top"><span aria-hidden="true">↑</span><span class="back-to-top-label">Top</span></a>
+  <dialog id="search-dialog" class="search-dialog" aria-labelledby="search-dialog-title">
+    <div class="search-panel">
+      <h2 id="search-dialog-title" class="sr-only">Search posts</h2>
+      <div class="search-bar">
+        <svg class="search-bar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 4.5 4.5"></path></svg>
+        <label class="sr-only" for="search-input">Search posts</label>
+        <input id="search-input" class="search-input" type="search" placeholder="Search posts…" autocomplete="off" spellcheck="false" aria-controls="search-results" aria-describedby="search-help">
+        <button class="search-close" type="button" data-search-close aria-label="Close search">Esc</button>
+      </div>
+      <p class="search-help" id="search-help">Titles, tags, categories, and full text. Use <kbd data-kbd-mod>Ctrl</kbd> <kbd>K</kbd> to open, ↑↓ to move, Enter to read.</p>
+      <div class="search-results" id="search-results" role="list" aria-label="Search results"></div>
+      <p class="search-status" id="search-status" role="status" aria-live="polite"></p>
+    </div>
+  </dialog>
+  <script src="/assets/site.js" defer></script>
+</body>
+</html>

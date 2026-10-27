@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cloudflare Tunnel for Homelab Services · Mordecai Kipng’etich</title>
+  <meta name="description" content="How I use Cloudflare Tunnel to securely expose my Docker homelab services without opening ports or revealing my public IP.">
+  <meta name="author" content="Mordecai Kipng’etich">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#009bad" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0a1114" media="(prefers-color-scheme: dark)">
+  <link rel="canonical" href="https://neobrutalist.insidemordecai.com/homelab-cloudflare-tunnel/">
+  <link rel="stylesheet" href="/assets/style.css">
+  <noscript><style>@media (max-width:639px){.site-nav{display:flex!important;order:3;flex-basis:100%;flex-direction:column;align-items:stretch;gap:0;margin-top:.5rem;border-top:3px solid var(--color-ink);padding-top:.5rem}.site-nav .nav-link{display:block;border-width:0 0 2px;border-style:dashed;border-color:color-mix(in srgb,var(--color-ink) 25%,transparent);padding:.7rem .75rem}.site-nav .nav-link:last-child{border-bottom:0}.nav-toggle{display:none!important}.logo-name{display:block!important}.logo-mark{display:none!important}}</style></noscript>
+  <link rel="alternate" type="application/rss+xml" title="Mordecai Kipng’etich" href="https://neobrutalist.insidemordecai.com/index.xml">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Cloudflare Tunnel for Homelab Services">
+  <meta property="og:description" content="How I use Cloudflare Tunnel to securely expose my Docker homelab services without opening ports or revealing my public IP.">
+  <meta property="og:url" content="https://neobrutalist.insidemordecai.com/homelab-cloudflare-tunnel/">
+  <meta property="og:site_name" content="Mordecai Kipng’etich">
+  <meta property="og:image" content="https://neobrutalist.insidemordecai.com/assets/img/social-image.webp">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Cloudflare Tunnel for Homelab Services">
+  <meta name="twitter:description" content="How I use Cloudflare Tunnel to securely expose my Docker homelab services without opening ports or revealing my public IP.">
+  <meta name="twitter:image" content="https://neobrutalist.insidemordecai.com/assets/img/social-image.webp">
+  <meta property="article:published_time" content="2026-03-09T17:05:15.000Z">
+  
+</head>
+<body id="top" class="flex min-h-screen flex-col bg-canvas font-sans text-ink antialiased">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="sticky top-0 z-50 border-b-4 border-ink bg-paper">
+    <div class="nav-shell mx-auto max-w-6xl px-4 py-3">
+      <a class="group flex min-w-0 items-center" href="/" aria-label="Mordecai Kipng’etich — home">
+        <span class="logo-mark h-10 w-10 place-items-center border-[3px] border-ink bg-teal font-black shadow-brutal-sm transition-transform group-hover:-rotate-3">MK</span>
+        <span class="logo-name truncate text-[13px] font-black uppercase tracking-tight">Mordecai Kipng’etich</span>
+      </a>
+      <nav id="site-nav" aria-label="Main" class="site-nav text-xs font-bold sm:text-sm"><a class="nav-link" href="/about/">About</a><a class="nav-link" href="/posts/" aria-current="page">Posts</a><a class="nav-link" href="/links/">Links</a><a class="nav-link" href="/subscribe/">Subscribe</a></nav>
+      <div class="nav-controls">
+        <a class="search-trigger" href="/posts/" data-search-open aria-label="Search posts" aria-haspopup="dialog" aria-controls="search-dialog" aria-keyshortcuts="Meta+K Control+K"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 4.5 4.5"></path></svg><span class="search-keys" aria-hidden="true"><kbd class="search-kbd" data-kbd-mod>Ctrl</kbd><kbd class="search-kbd search-kbd-key">K</kbd></span></a>
+        <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu">
+          <span class="nav-toggle-bars" aria-hidden="true"><span class="nav-toggle-bar"></span><span class="nav-toggle-bar"></span><span class="nav-toggle-bar"></span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+  <main id="main" class="flex-1">
+  <header class="border-b-4 border-ink bg-purple">
+    <div class="mx-auto max-w-6xl px-4 py-8 sm:py-12">
+      <nav aria-label="Breadcrumb" class="font-mono text-[11px] uppercase tracking-widest"><a class="underline decoration-2 underline-offset-2 hover:bg-ink hover:text-paper" href="/">Home</a> <span aria-hidden="true">/</span> <a class="underline decoration-2 underline-offset-2 hover:bg-ink hover:text-paper" href="/posts/">Posts</a></nav>
+      
+      <h1 class="mt-5 max-w-4xl break-words text-4xl font-black uppercase leading-[0.95] tracking-tight sm:text-5xl lg:text-6xl">Cloudflare Tunnel for Homelab Services</h1>
+      <p class="mt-4 max-w-3xl text-base leading-relaxed opacity-80">Using Cloudflare Tunnel to securely expose my homelab services.</p>
+      <div class="on-accent-muted mt-6 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] uppercase tracking-widest"><time datetime="2026-03-09">9 March 2026</time><span aria-hidden="true">·</span><span>3 min read</span></div>
+    </div>
+  </header>
+  <div class="mx-auto max-w-6xl px-4 py-10">
+    <div class="grid gap-8 lg:grid-cols-[220px_minmax(0,1fr)]">
+      <aside class="h-fit lg:sticky lg:top-24"><nav aria-label="Table of contents" class="border-[3px] border-ink bg-paper p-4 shadow-brutal-sm"><p class="font-black uppercase tracking-tight">On this page</p><ul class="mt-3 max-h-[calc(100vh-12rem)] space-y-1.5 overflow-auto text-sm"><li class=""><a class="toc-link" href="#why-cloudflare-tunnel">Why Cloudflare Tunnel</a></li><li class=""><a class="toc-link" href="#setup-process">Setup Process</a></li><li class=""><a class="toc-link" href="#application-routes">Application Routes</a></li><li class=""><a class="toc-link" href="#a-note-on-security">A Note on Security</a></li><li class=""><a class="toc-link" href="#thats-it">That&#39;s It</a></li><li class=""><a class="toc-link" href="#explore-further">Explore Further</a></li></ul></nav></aside>
+      <div class="min-w-0">
+        <article class="prose-neo max-w-3xl "><p>After getting my media stack stable as shown in my <a href="/self-hosted-media-with-docker/">previous post</a>, the next question was remote
+access.</p>
+<p>As a side note, since I&#39;ll be changing my homelab setup, I&#39;m thinking of adding <a href="https://tailscale.com/" target="_blank" rel="noopener noreferrer">Tailscale</a> as a VPN to securely connect to certain services.</p>
+<p>Anyway, I already manage my domains on Cloudflare, so using Cloudflare Tunnel would always the cleanest option.
+I had used it before in Fedora and tried a containerized version on Arch. 
+So it was only natural for me to side-step to a Docker Compose setup. </p>
+<p>This is how I set mine up.</p>
+<h2 id="why-cloudflare-tunnel">Why Cloudflare Tunnel<a class="heading-anchor" href="#why-cloudflare-tunnel" aria-label="Link to this section">#</a></h2>
+<ul>
+<li>No port forwarding</li>
+<li>No exposing my public IP</li>
+<li>Encrypted traffic by default</li>
+<li>Works well if you already use Cloudflare for DNS</li>
+</ul>
+<p>It&#39;s simple. 
+It&#39;s predictable. 
+And it removes a lot of the usual home network headache.</p>
+<p>That being said, exposing internal services always carries risk. 
+Try to understand what you&#39;re doing before making anything public.</p>
+<h2 id="setup-process">Setup Process<a class="heading-anchor" href="#setup-process" aria-label="Link to this section">#</a></h2>
+<p>Create a tunnel from the Cloudflare dashboard: <strong>Zero Trust → Network → Connectors</strong>.</p>
+<p>After creating it, Cloudflare gives you a command to run the connector.
+For Docker, it looks like this:</p>
+<pre><code class="language-shell">docker run cloudflare/cloudflared:latest tunnel --no-autoupdate run --token randomTextHereAsTokenlSP1kY34p8^jKaX28XGo5xR5uVXftLHP0Y3+pBmT$jg
+</code></pre>
+<p>Copy the token that appears after <code>--token</code> and add it to your <code>.env</code> file:</p>
+<pre><code>TOKEN=randomTextHereAsTokenlSP1kY34p8^jKaX28XGo5xR5uVXftLHP0Y3+pBmT$jg
+</code></pre>
+<p>Deploy the container using your compose setup.
+If you look at my setup in the previous post, I create a shared network. 
+This is simply to make it easy for the containers to communicate with each other since I have Cloudflared and the Arr Apps running in different stacks.</p>
+<h2 id="application-routes">Application Routes<a class="heading-anchor" href="#application-routes" aria-label="Link to this section">#</a></h2>
+<p>Back in the Cloudflare dashboard, configure application routes for the tunnel.</p>
+<p>Each route maps:</p>
+<ul>
+<li>A public hostname (for example <code>seerr.yourdomain.com</code>)</li>
+<li>To a local service (for example <code>http://seerr:5055</code>)</li>
+</ul>
+<p>You can point different subdomains to different containers inside your Docker network.
+Once saved, traffic flows through Cloudflare to your connector, and then into your local container.
+No open ports required.</p>
+<h2 id="a-note-on-security">A Note on Security<a class="heading-anchor" href="#a-note-on-security" aria-label="Link to this section">#</a></h2>
+<p>Just because you can expose something doesn&#39;t mean you should.</p>
+<p>Make sure:</p>
+<ul>
+<li>Strong authentication is enabled (check out Explore Further section below for guide on Access Control)</li>
+<li>Default credentials are changed</li>
+<li>Services are updated</li>
+<li>You actually need remote access</li>
+</ul>
+<p>Cloudflare Tunnel makes exposure safer, not magically safe.</p>
+<p>If you&#39;re unsure, keep everything local.</p>
+<h2 id="thats-it">That&#39;s It<a class="heading-anchor" href="#thats-it" aria-label="Link to this section">#</a></h2>
+<p>Once the tunnel is running, it&#39;s mostly invisible. 
+It just works in the background.</p>
+<p>For me, this paired perfectly with my Docker media stack. 
+Clean internal networking, and controlled external access when needed.</p>
+<p>You can find compose files here:
+<a href="https://github.com/insidemordecai/homelab/tree/blog-media-stack-2026" target="_blank" rel="noopener noreferrer">github.com/insidemordecai/homelab/tree/blog-media-stack-2026</a></p>
+<h2 id="explore-further">Explore Further<a class="heading-anchor" href="#explore-further" aria-label="Link to this section">#</a></h2>
+<ul>
+<li><a href="https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/" target="_blank" rel="noopener noreferrer">Cloudflare Tunnel Official Docs</a></li>
+<li>How to <a href="https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/get-started/create-remote-tunnel/" target="_blank" rel="noopener noreferrer">create a tunnel (dashboard)</a> - step‑by‑step guide to creating and connecting your first tunnel directly from the Cloudflare dashboard.</li>
+<li><a href="https://benjamintseng.com/2025/07/cloudflare-tunnels-for-your-home-server/" target="_blank" rel="noopener noreferrer">Cloudflare Tunnels for Your Home Server</a> - <a href="https://benjamintseng.com/" target="_blank" rel="noopener noreferrer">Benjamin Tseng </a>has a solid section on authentication and access control that you can adapt for your media stack.</li>
+<li><a href="https://www.reddit.com/r/selfhosted/comments/1bf9si9/guide_how_to_securely_gain_access_to_your_locally/" target="_blank" rel="noopener noreferrer">How to SECURELY gain access to your locally self-hosted services from outside</a> - a Reddit guide on <a href="https://www.reddit.com/r/selfhosted/" target="_blank" rel="noopener noreferrer">r/selfhosted</a>.</li>
+<li><a href="https://blog.cloudflare.com/securing-cloudflare-with-cloudflare-zero-trust/" target="_blank" rel="noopener noreferrer">Securing Cloudflare with Cloudflare: a Zero Trust journey</a> - a deeper dive into how Cloudflare applies Zero Trust principles to its own stack.</li>
+</ul>
+</article>
+        <div class="mt-10 flex flex-wrap items-center gap-x-4 gap-y-2 border-t-2 border-ink/20 pt-5 font-mono text-xs"><span class="uppercase tracking-widest text-ink/60">Filed under</span><a class="underline decoration-ink/25 underline-offset-4 hover:decoration-ink" href="/categories/technical/">Technical</a><a class="text-ink/60 hover:text-ink hover:underline" href="/tags/homelab/">#Homelab</a><a class="text-ink/60 hover:text-ink hover:underline" href="/tags/cloudflare-tunnel/">#Cloudflare Tunnel</a></div>
+        <div class="mt-12 border-[3px] border-ink bg-acid p-6 shadow-brutal sm:flex sm:items-center sm:justify-between sm:gap-6"><div><p class="text-xl font-black uppercase tracking-tight">Got thoughts?</p><p class="mt-1 text-sm font-bold">Reply by email — I read everything.</p></div><a class="btn mt-4 bg-paper sm:mt-0" href="mailto:mk@insidemordecai.com?subject=Re%3A%20Cloudflare%20Tunnel%20for%20Homelab%20Services">Reply by email →</a></div>
+        <nav aria-label="Post navigation" class="mt-10 grid gap-4 sm:grid-cols-2"><a class="card p-5" href="/linux-one-more-time/"><p class="font-mono text-[10px] uppercase tracking-widest text-ink/60">← Newer</p><p class="mt-2 font-black leading-tight">Re: FINE! I’ll Try Linux ONE MORE TIME...</p></a><a class="card p-5 sm:text-right" href="/self-hosted-media-with-docker/"><p class="font-mono text-[10px] uppercase tracking-widest text-ink/60">Older →</p><p class="mt-2 font-black leading-tight">Self Hosted Media With Docker</p></a></nav>
+        <div class="mt-8"><a class="font-black underline decoration-4 decoration-teal underline-offset-4 hover:bg-acid" href="/posts/">← Back to all posts</a></div>
+      </div>
+    </div>
+  </div></main>
+  <footer class="site-footer border-t-4 border-ink">
+    <div class="mx-auto max-w-6xl px-4 py-10">
+      <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+        <a class="inline-flex items-center gap-3" href="/" aria-label="Mordecai Kipng’etich — home">
+          <span class="grid h-10 w-10 place-items-center border-[3px] border-ink bg-acid font-black">MK</span>
+          <span class="text-sm font-black uppercase tracking-tight">Mordecai Kipng’etich</span>
+        </a>
+        <nav aria-label="Footer">
+          <ul class="flex flex-wrap gap-x-6 gap-y-2 text-sm font-bold">
+            <li><a href="/categories/">Categories</a></li>
+            <li><a href="/tags/">Tags</a></li>
+            <li><a href="/series/">Series</a></li>
+            <li><a href="/contact/">Contact</a></li>
+            <li><a href="/support/">Support</a></li>
+            <li><a href="/colophon/">Colophon</a></li>
+            <li><a href="/index.xml">RSS</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </footer>
+  <a class="back-to-top" id="back-to-top" href="#top" aria-label="Back to top"><span aria-hidden="true">↑</span><span class="back-to-top-label">Top</span></a>
+  <dialog id="search-dialog" class="search-dialog" aria-labelledby="search-dialog-title">
+    <div class="search-panel">
+      <h2 id="search-dialog-title" class="sr-only">Search posts</h2>
+      <div class="search-bar">
+        <svg class="search-bar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 4.5 4.5"></path></svg>
+        <label class="sr-only" for="search-input">Search posts</label>
+        <input id="search-input" class="search-input" type="search" placeholder="Search posts…" autocomplete="off" spellcheck="false" aria-controls="search-results" aria-describedby="search-help">
+        <button class="search-close" type="button" data-search-close aria-label="Close search">Esc</button>
+      </div>
+      <p class="search-help" id="search-help">Titles, tags, categories, and full text. Use <kbd data-kbd-mod>Ctrl</kbd> <kbd>K</kbd> to open, ↑↓ to move, Enter to read.</p>
+      <div class="search-results" id="search-results" role="list" aria-label="Search results"></div>
+      <p class="search-status" id="search-status" role="status" aria-live="polite"></p>
+    </div>
+  </dialog>
+  <script src="/assets/site.js" defer></script>
+</body>
+</html>
