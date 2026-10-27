@@ -55,9 +55,11 @@ jobs:
         run: npm run check
 
       - name: Commit synced content
+        id: sync
         run: |
           if [ -z "$(git status --porcelain -- content)" ]; then
             echo "No content changes."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -66,12 +68,18 @@ jobs:
           git add content
           git commit -m "Sync content from upstream"
           git push
+          echo "changed=true" >> "$GITHUB_OUTPUT"
 
+      # Scheduled runs deploy only when the sync actually changed something, so
+      # polling every six hours does not create no-op gh-pages commits. Pushes
+      # and manual runs always deploy, since they may change the site itself.
       - name: Deploy to gh-pages
+        if: github.event_name != 'schedule' || steps.sync.outputs.changed == 'true'
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: ./dist
           cname: neobrutalist.insidemordecai.com
-          force_orphan: true
+          user_name: github-actions[bot]
+          user_email: 41898282+github-actions[bot]@users.noreply.github.com

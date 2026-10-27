@@ -184,6 +184,7 @@ deploys.
 - `content/colophon/index.md` is a deliberate local override and is restored after each sync so the clone-specific colophon is not overwritten.
 - Nothing is committed or deployed if `npm run build` or `npm run check` fails.
 - A content change is committed back to `main` as `github-actions[bot]`, then `dist/` is published to the `gh-pages` branch.
+- Scheduled runs only deploy when the sync actually changed content. A run that finds nothing new builds and validates, then stops — so the six-hourly polling does not add empty `gh-pages` commits. Pushes and manual runs always deploy.
 
 To sync locally:
 
@@ -198,6 +199,11 @@ If upstream becomes private, add a read-only token to the upstream checkout step
 The workflow publishes `dist/` to the `gh-pages` branch with
 `peaceiris/actions-gh-pages`. The custom domain is
 **`neobrutalist.insidemordecai.com`**.
+
+`gh-pages` keeps a normal deployment history: each deploy adds one commit on top
+of the previous one, authored by `github-actions[bot]`. Because only real changes
+trigger a scheduled deploy, the branch gains a commit roughly when upstream
+content changes rather than four times a day.
 
 One-time GitHub setup:
 
