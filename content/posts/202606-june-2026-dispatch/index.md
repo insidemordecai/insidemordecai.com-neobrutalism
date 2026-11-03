@@ -5,7 +5,9 @@ summary: A quick collection of what I watched, listened to, and read this month.
 description: A monthly entry in my Dispatch series, gathering what I’ve been watching, reading, and listening to. It’s a personal snapshot of what caught my attention online during June 2026.
 date: 2026-06-30T22:37:24+03:00
 categories: [Web]
-tags: [Links]
+tags: [Links, Dispatch]
+series: ["2026 Dispatch"]
+series_order: 4
 draft: false
 ---
 
