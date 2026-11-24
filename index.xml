@@ -5,9 +5,42 @@
     <link>https://neobrutalist.insidemordecai.com/</link>
     <description>Personal website and blog about tech, media, books, music, homelabs, and life in Kenya.</description>
     <language>en</language>
-    <lastBuildDate>Sat, 31 Oct 2026 16:44:32 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 23 Nov 2026 18:29:57 GMT</lastBuildDate>
     <copyright>CC BY-NC-SA 4.0 — Mordecai Kipng’etich</copyright>
     <atom:link href="https://neobrutalist.insidemordecai.com/index.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Vibe Coding a Clone of My Website</title>
+      <link>https://neobrutalist.insidemordecai.com/vibe-coding-website-clone/</link>
+      <guid isPermaLink="true">https://neobrutalist.insidemordecai.com/vibe-coding-website-clone/</guid>
+      <pubDate>Mon, 23 Nov 2026 18:29:57 GMT</pubDate>
+      <description>Letting opencode attempt to recreate the feel of my site.</description>
+      <content:encoded><![CDATA[<p>I know a lot of people on the indie web are not really fans of AI especially when it comes to our websites.
+I myself share quite a lot of those sentiments especially if one treats it like a replacement for actually knowing how to build software.
+However, I’ve been thinking a lot lately whether I should cave in and use it for the website code while maintaining full control of my writing.</p>
+<p>I mean I already use LLM to assist me with other projects, especially with documentation and fixing issues that are a hassle.
+What’s one more step into the deep end?</p>
+<p>The reason I’ve been pondering on this recently is that I got to finally try some agents.
+I heard all the hype before but never tried any until I gave opencode a shot not too long ago.
+I fired up a new project, gave it access to GitHub CLI and gave it some instructions.
+The perfect guinea pig proved to be my own site.
+I know it very well, its feel and vibe is ingrained in me, and the scope is small enough that I can review everything.
+And so I got to work cloning my site while changing the design style to neobrutalism, a design style I’ve considered coding and switching to for some time now.</p>
+<p>To make it clear, the result will not replace the current site.
+This was merely a private test of popular tool.</p>
+<p>So what were the results of my experiment?</p>
+<p>I have to say the results were spectacular.
+Aside from a few bugs here and there and design choices I didn’t agree with, the code made sense and the result was more than usable.
+Heck, I think a lot of people would praise the design.</p>
+<p>The question that keeps coming to mind is this: what’s the difference between using pre-built themes for a static site generator and using AI to code your website?
+Keep in mind that you’re likely indirectly a beneficiary AI if the creators and contributors of these themes are using it themselves.
+Aren’t you more aware of your vibe-coded “slop” if you actually reviewed the output along the way?</p>
+<p>I don’t think I’m making sense and I don’t have a fully formed take on this but I felt like writing it up.
+What I know is I’m not ready to hand over the reins to AI especially with this website but I can see the various opportunities it can open when used wisely.</p>
+<div style="margin:28px 0 8px;padding:16px;border:2px solid #101314;background:#ffd447"><p style="margin:0 0 10px;font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.12em">Got thoughts?</p><a href="mailto:mk@insidemordecai.com?subject=Re%3A%20Vibe%20Coding%20a%20Clone%20of%20My%20Website" style="display:inline-block;border:2px solid #101314;background:#fffdf6;padding:8px 14px;font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;font-size:13px;font-weight:700;text-decoration:none;color:#101314">Reply by email →</a></div>]]></content:encoded>
+      <category>Opinion</category>
+      <category>AI</category>
+      <category>Vibe Coding</category>
+    </item>
     <item>
       <title>October 2026 Dispatch</title>
       <link>https://neobrutalist.insidemordecai.com/october-2026-dispatch/</link>
